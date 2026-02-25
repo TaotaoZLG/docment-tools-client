@@ -1,0 +1,221 @@
+﻿<Page x:Class="docment_tools_client.Views.DocumentGeneratePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:docment_tools_client.Views" xmlns:mui="http://schemas.modernwpf.com/2019" xmlns:helpers="clr-namespace:docment_tools_client.Helpers"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="DocumentGeneratePage">
+
+    <!-- 下方分栏布局 -->
+    <Grid Grid.Row="2" Grid.ColumnSpan="2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <!-- 模块2：左侧功能区 -->
+            <ColumnDefinition Width="1.2*"/>
+            <!-- 模块3：右侧日志区 -->
+        </Grid.ColumnDefinitions>
+
+        <!-- 模块2：功能区 -->
+        <Border Grid.Column="0" Margin="0,0,10,0" CornerRadius="{StaticResource ContainerCornerRadius}" 
+                    Background="#F8F9FA" BorderBrush="#E5E5E5" BorderThickness="1"
+                    Effect="{StaticResource ContainerShadow}">
+            <Grid Margin="15">
+
+                <!-- 功能步骤表单 -->
+                <!-- 美化修改：隐藏滚动条 -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,10,0">
+                    <StackPanel>
+                        <!-- 1. 文书类型 -->
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <mui:SymbolIcon Symbol="Page" Margin="0,0,10,0" Foreground="#0078D7"/>
+                                <TextBlock Text="1. 选择文书类型" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,10"/>
+                            <ComboBox ItemsSource="{Binding DocumentTypes}" 
+                                      SelectedItem="{Binding SelectedDocumentType}"
+                                      HorizontalAlignment="Stretch" Margin="30,0,0,0"/>
+                        </StackPanel>
+
+                        <!-- 2. 模板文件 -->
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <mui:SymbolIcon Symbol="OpenFile" Margin="0,0,10,0" Foreground="#0078D7"/>
+                                <TextBlock Text="2. 模板文件" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,10"/>
+                            <Grid Margin="30,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding TemplatePath}" IsReadOnly="True" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="浏览..." Command="{Binding SelectTemplateCommand}"/>
+                            </Grid>
+                            <!-- 导出Word模版链接 -->
+                            <StackPanel Orientation="Horizontal" Margin="30,10,0,0">
+                                <Button Content="下载Word文书模版" Command="{Binding ExportWordTemplateCommand}"
+                                    Background="Transparent" Foreground="#0078D7" BorderThickness="0"
+                                    HorizontalAlignment="Left" Padding="0"/>
+                                <TextBlock Text="（根据文书风格，部分文书类型会有多种模板）" Foreground="Gray" VerticalAlignment="Center" Margin="5,0,0,0" FontSize="11"/>
+                            </StackPanel>
+
+
+                        </StackPanel>
+
+
+                        <!-- 3. 数据文件 -->
+
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <mui:SymbolIcon Symbol="Library" Margin="0,0,10,0" Foreground="#0078D7"/>
+                                <TextBlock Text="3. 案件数据 (Excel)" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,10"/>
+                            <Grid Margin="30,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding ExcelPath}" IsReadOnly="True" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="浏览..." Command="{Binding SelectExcelCommand}"/>
+                            </Grid>
+                            <!-- 导出模板链接 -->
+                            <Button Content="下载Excel数据模板" Command="{Binding ExportTemplateCommand}"
+                                    Background="Transparent" Foreground="#0078D7" BorderThickness="0"
+                                    HorizontalAlignment="Left" Margin="30,10,0,0" Padding="0"/>
+
+
+                        </StackPanel>
+
+                        <!-- Combined Row: Fill Count & Output Format -->
+                        <Grid Margin="30,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 4. 填充配置 -->
+                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                <TextBlock Text="填充人数/每份 (手动输入或选择，留空则默认填充全部)" Margin="0,0,0,5" Foreground="Gray"/>
+                                <ComboBox IsEditable="True"
+                                      IsTextSearchEnabled="False"
+                                      ItemsSource="{Binding FillCountOptions}"
+                                      Text="{Binding FillCountText, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <!-- 6. 生成格式 -->
+                            <StackPanel Grid.Column="1" Margin="10,0,10,0">
+                                <TextBlock Text="输出格式" Margin="0,0,0,5" Foreground="Gray"/>
+                                <ComboBox ItemsSource="{Binding GenerateFormats}" 
+                                          SelectedItem="{Binding SelectedGenerateFormat}"
+                                          HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 7. 文件名规则 (Separate Row) -->
+                        <StackPanel Margin="30,0,0,20">
+                            <TextBlock Text="文件名规则 (如: {案号}-{姓名})" Margin="0,0,0,5" Foreground="Gray"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding FileNameRule, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="快捷选择" Command="{Binding QuickSelectCommand}" Padding="8,4"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- 8. 输出目录 -->
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <mui:SymbolIcon Symbol="Folder" Margin="0,0,10,0" Foreground="#0078D7"/>
+                                <TextBlock Text="4. 存储位置" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,10"/>
+                            <Grid Margin="30,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding OutputDir}" IsReadOnly="True" Margin="0,0,10,0"/>
+                                <Button Grid.Column="1" Content="选择目录..." Command="{Binding SelectOutputDirCommand}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- 9. 核心操作 -->
+                        <StackPanel Margin="0,10,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <mui:SymbolIcon Symbol="Play" Margin="0,0,10,0" Foreground="#0078D7"/>
+                                <TextBlock Text="5. 执行操作" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,15"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="生成预览" Command="{Binding PreviewCommand}" Width="120"/>
+                                <!-- 美化修改：开始生成按钮深蓝强调 -->
+                                <Button Content="开始生成" Command="{Binding StartGenerateCommand}" 
+                                        Width="150" Background="#0078D7" Foreground="White"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- 模块3：日志区 -->
+        <!-- 美化修改：亚克力背景，圆角 -->
+        <Border Grid.Column="1" Margin="10,0,0,0" CornerRadius="{StaticResource ContainerCornerRadius}" 
+                    Background="#F8F9FA" BorderBrush="#E5E5E5" BorderThickness="1"
+                    Effect="{StaticResource ContainerShadow}">
+            <Grid Margin="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <DockPanel Grid.Row="0" Margin="0,0,0,10" LastChildFill="False">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                        <mui:SymbolIcon Symbol="List" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="实时日志" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                        <Button Content="导出日志" Width="100"/>
+                        <Button Content="清空" Width="60" Command="{Binding ClearLogCommand}"/>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- 日志列表 -->
+                <!-- 美化修改：Listbox样式优化 -->
+                <ListView Grid.Row="1" ItemsSource="{Binding LogList}" BorderThickness="0" Background="Transparent"
+                              AlternationCount="2" ItemContainerStyle="{StaticResource LogListViewItemStyle}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+
+                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" ToolTip="{Binding Content}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Error}">
+                                                <Setter Property="Foreground" Value="#D13438"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Warn}">
+                                                <Setter Property="Foreground" Value="#FF8C00"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Info}">
+                                                <Setter Property="Foreground" Value="#107C10"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

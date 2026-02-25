@@ -1,0 +1,46 @@
+# ==================== Visual Studio 2026 专属配置（对应Java的.idea） ====================
+# IDE缓存文件夹
+.vs/
+# 用户级配置文件（记录个人调试、窗口布局）
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+# 调试相关文件
+debug/
+release/
+
+# ==================== .NET 编译产物（对应Java的target） ====================
+# 编译中间产物文件夹
+obj/
+# 编译最终产物文件夹
+bin/
+# 发布产物文件夹（后续打包发布生成）
+publish/
+# 程序集缓存文件夹
+AssemblyInfo/
+# 编译日志文件
+*.log
+*.tmp
+*.bak
+
+# ==================== NuGet 相关（对应Java的node_modules） ====================
+# NuGet包本地缓存文件夹
+packages/
+# NuGet依赖解析文件（自动生成）
+project.assets.json
+# NuGet包打包产物
+*.nupkg
+# NuGet缓存文件
+*.nuget.props
+*.nuget.targets
+# 本地NuGet包还原缓存
+global.json
+
+# ==================== 通用无用文件 ====================
+# 操作系统隐藏文件
+.DS_Store
+Thumbs.db
+# 压缩包
+*.zip
+*.rar
