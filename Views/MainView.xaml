@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:docment_tools_client.Views"
         xmlns:vm="clr-namespace:docment_tools_client.ViewModels"
         mc:Ignorable="d"
-        Title="律表通·法律文书处理工具 - 主页" Height="950" Width="1200"
+        Title="律表通·法律文书处理工具 - 主页" Height="950" Width="1300"
         WindowStartupLocation="CenterScreen"
         Icon="/Resources/Images/icon.png"
         Background="{DynamicResource SystemControlPageBackgroundChromeLowBrush}"
@@ -166,8 +166,23 @@
                          ItemContainerStyle="{StaticResource MenuListItemStyle}"
                          Margin="10,40,10,10" Background="Transparent"
                          BorderThickness="0">
-                    <ListBoxItem Tag="DocumentGeneratePage" Content="文书生成"/>
-                    <ListBoxItem Tag="DocumentManagePage" Content="文书管理"/>
+                    <!--带图标的菜单项（如果需要，可以取消注释并调整样式）-->
+                    <!--<ListBoxItem Tag="DocumentGeneratePage">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="Page" Margin="0,0,10,0"/>
+                            <TextBlock Text="文书生成"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="DocumentManagePage">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="Folder" Margin="0,0,10,0"/>
+                            <TextBlock Text="文书管理"/>
+                        </StackPanel>
+                    </ListBoxItem>-->
+                    <ListBoxItem Tag="HomePage" Content="首页"/>
+                    <ListBoxItem Tag="DocumentFilingPage" Content="文件归纳"/>
+                    <ListBoxItem Tag="DocumentGenerateView" Content="文书生成"/>
+                    <!--<ListBoxItem Tag="DocumentManagePage" Content="文书管理"/>-->
                     <ListBoxItem Tag="TemplateManagePage" Content="模板管理"/>
                     <ListBoxItem Tag="SystemSettingPage" Content="系统设置"/>
                 </ListBox>
