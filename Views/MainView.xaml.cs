@@ -25,19 +25,19 @@ namespace docment_tools_client.Views
         {
             InitializeComponent();
 
-            // 初始化：默认选中第一个菜单（文书生成），自动加载对应页面
+            // 初始化：默认选中第一个菜单（首页）
             if (MenuListBox.Items.Count > 0)
             {
-                MenuListBox.SelectedIndex = 2;
+                MenuListBox.SelectedIndex = 0;
             }
         }
-
+       
         /// <summary>
         /// 带用户信息的构造函数
         /// </summary>
         public MainView(UserInfo userInfo) : this()
         {
-            DataContext = new ViewModels.MainViewModel(userInfo);
+            DataContext = new MainViewModel(userInfo);
         }
 
         /// <summary>
@@ -82,11 +82,46 @@ namespace docment_tools_client.Views
                 }
                 UserInfo userInfo = mainViewModel.UserInfo;
 
-                // 创建页面实例
-                Page targetPage = (Page)Activator.CreateInstance(pageType);
+                // 伪造测试用户信息
+                //UserInfo userInfo = new UserInfo
+                //{
+                //    UserId = 1001,
+                //    UserName = "测试管理员",
+                //    Account = "test_admin",
+                //    Token = "TEST_TOKEN_20240520",
+                //    Quota = 99999.99m,
+                //    UserPrice = 0.001m,
+                //    LoginRecordId = 9999,
+                //    Status = UserStatus.ONLINE,
+                //    EncryptedQuota = "fake_encrypt_quota_test",
+                //    EncryptedUserPrice = "fake_encrypt_price_test"
+                //};
 
-                // ===== 关键：给页面的ViewModel传递UserInfo =====
-                // 方式2（备选）：直接给页面自身赋值UserInfo（若页面有UserInfo属性）
+                // ===== 核心修复：兼容无参/有参构造创建页面 =====
+                Page targetPage = null;
+                try
+                {
+                    // 尝试1：无参构造创建（优先）
+                    targetPage = (Page)Activator.CreateInstance(pageType);
+                }
+                catch (MissingMethodException)
+                {
+                    // 尝试2：调用接收UserInfo参数的构造函数
+                    var constructor = pageType.GetConstructor(new[] { typeof(UserInfo) });
+                    if (constructor != null)
+                    {
+                        targetPage = (Page)constructor.Invoke(new object[] { userInfo });
+                    }
+                    else
+                    {
+                        // 尝试3：调用其他常见构造（比如ViewModel），若无则抛明确错误
+                        throw new InvalidOperationException(
+                            $"页面 {targetPageName} 既无无参构造，也无接收 UserInfo 的构造函数！\n" +
+                            $"请给页面添加：public {targetPageName}() {{ }}  或  public {targetPageName}(UserInfo userInfo) {{ }}");
+                    }
+                }
+
+                // ===== 给页面赋值UserInfo（兜底）=====
                 var pageUserInfoProp = targetPage.GetType().GetProperty("UserInfo");
                 if (pageUserInfoProp != null && pageUserInfoProp.CanWrite)
                 {

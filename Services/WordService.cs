@@ -1,4 +1,4 @@
-using docment_tools_client.Helpers;
+ï»¿using docment_tools_client.Helpers;
 using docment_tools_client.Models;
 using NPOI.XWPF.UserModel;
 using NPOI.OpenXmlFormats.Wordprocessing;
@@ -12,16 +12,16 @@ using System.Text;
 namespace docment_tools_client.Services
 {
     /// <summary>
-    /// Éı¼¶°æWordÄ£°å²Ù×÷¹¤¾ßÀà£¨»ùÓÚNPOI£¬Ö§³Öµ¥ÖµÌî³ä¡¢±í¸ñÑ­»·¡¢¶ÎÂäÑ­»·£©
+    /// å‡çº§ç‰ˆWordæ¨¡æ¿æ“ä½œå·¥å…·ç±»ï¼ˆåŸºäºNPOIï¼Œæ”¯æŒå•å€¼å¡«å……ã€è¡¨æ ¼å¾ªç¯ã€æ®µè½å¾ªç¯ï¼‰
     /// </summary>
     public static class WordService
     {
-        // ±ê¼Ç³£Á¿
+        // æ ‡è®°å¸¸é‡
         private const string LoopStartPattern = "LOOP_(\\w+)_START"; // {{LOOP_Item_START}}
         // private const string LoopEndPattern = "LOOP_(\\w+)_END";     // {{LOOP_Item_END}}
 
         /// <summary>
-        /// »ñÈ¡Ä¬ÈÏÄ£°åÂ·¾¶
+        /// è·å–é»˜è®¤æ¨¡æ¿è·¯å¾„
         /// </summary>
         public static string GetDefaultTemplatePath()
         {
@@ -34,7 +34,7 @@ namespace docment_tools_client.Services
         }
 
         /// <summary>
-        /// Ô¤ÀÀWordÎÄµµ
+        /// é¢„è§ˆWordæ–‡æ¡£
         /// </summary>
         public static void PreviewWord(string path)
         {
@@ -46,28 +46,28 @@ namespace docment_tools_client.Services
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.Error($"ÎŞ·¨Ô¤ÀÀÎÄµµ£º{path}", ex);
+                    LogHelper.Error($"æ— æ³•é¢„è§ˆæ–‡æ¡£ï¼š{path}", ex);
                 }
             }
         }
 
-        #region ºËĞÄÉú³É·½·¨
+        #region æ ¸å¿ƒç”Ÿæˆæ–¹æ³•
 
         /// <summary>
-        /// Éú³Éµ¥·İÎÄÊé
+        /// ç”Ÿæˆå•ä»½æ–‡ä¹¦
         /// </summary>
-        // ÎªÁË¼æÈİ¾É´úÂë£¬±£ÁôÔ­Ç©Ãû¡£
+        // ä¸ºäº†å…¼å®¹æ—§ä»£ç ï¼Œä¿ç•™åŸç­¾åã€‚
         public static bool GenerateWord(string templatePath, DynamicCaseData caseData, string outputFilePath, bool withAttachment, bool isReadOnly = false)
         {
-             // ¼òµ¥µÄÊÊÅäÆ÷£º½«µ¥Ò» CaseData ÊÓÎªÒ»¸ö°üº¬µ¥ÌõÊı¾İµÄÁĞ±íÉÏÏÂÎÄ£¿
-             // ²»£¬"µ¥·İÎÄÊé" ÈÔÈ»ÊÇ "Single Context"¡£
-             // µ«Èç¹û caseData.CaseInfo ÖĞ°üº¬ "Items" ÁĞ±íÍ¬Ñù¿ÉÒÔ´¦Àí Loop¡£
-             // ÕâÀïÖ÷ÒªÂß¼­²»±ä£¬ÎÒÃÇÌí¼ÓÒ»¸öĞÂµÄÖØÔØ»òÕßÔÚÄÚ²¿ÅĞ¶Ï¡£
+             // ç®€å•çš„é€‚é…å™¨ï¼šå°†å•ä¸€ CaseData è§†ä¸ºä¸€ä¸ªåŒ…å«å•æ¡æ•°æ®çš„åˆ—è¡¨ä¸Šä¸‹æ–‡ï¼Ÿ
+             // ä¸ï¼Œ"å•ä»½æ–‡ä¹¦" ä»ç„¶æ˜¯ "Single Context"ã€‚
+             // ä½†å¦‚æœ caseData.CaseInfo ä¸­åŒ…å« "Items" åˆ—è¡¨åŒæ ·å¯ä»¥å¤„ç† Loopã€‚
+             // è¿™é‡Œä¸»è¦é€»è¾‘ä¸å˜ï¼Œæˆ‘ä»¬æ·»åŠ ä¸€ä¸ªæ–°çš„é‡è½½æˆ–è€…åœ¨å†…éƒ¨åˆ¤æ–­ã€‚
              return GenerateWordInternal(templatePath, caseData, outputFilePath, withAttachment, isReadOnly);
         }
 
         /// <summary>
-        /// (ĞÂ) Éú³ÉÎÄÊé£¬Ö§³Ö List<DynamicCaseData> ×÷ÎªÉÏÏÂÎÄ£¨ÓÃÓÚÌî³äÈËÊı·Ö¸îºóµÄÅúÁ¿Êı¾İ£©
+        /// (æ–°) ç”Ÿæˆæ–‡ä¹¦ï¼Œæ”¯æŒ List<DynamicCaseData> ä½œä¸ºä¸Šä¸‹æ–‡ï¼ˆç”¨äºå¡«å……äººæ•°åˆ†å‰²åçš„æ‰¹é‡æ•°æ®ï¼‰
         /// </summary>
         public static bool GenerateWord(string templatePath, List<DynamicCaseData> caseDataList, string outputFilePath, bool withAttachment, bool isReadOnly = false)
         {
@@ -78,7 +78,7 @@ namespace docment_tools_client.Services
         {
             if (dataContext == null || string.IsNullOrEmpty(templatePath) || !File.Exists(templatePath))
             {
-                LogHelper.Error($"Éú³ÉÊ§°Ü£ºÎŞĞ§µÄ²ÎÊı»òÄ£°å²»´æÔÚ {templatePath}");
+                LogHelper.Error($"ç”Ÿæˆå¤±è´¥ï¼šæ— æ•ˆçš„å‚æ•°æˆ–æ¨¡æ¿ä¸å­˜åœ¨ {templatePath}");
                 return false;
             }
 
@@ -103,11 +103,11 @@ namespace docment_tools_client.Services
                 using var doc = new XWPFDocument(ms);
 
 
-                // 1. ´¦ÀíÑ­»·Ìî³ä (Ö§³Ö List<DynamicCaseData> ÉÏÏÂÎÄ)
+                // 1. å¤„ç†å¾ªç¯å¡«å…… (æ”¯æŒ List<DynamicCaseData> ä¸Šä¸‹æ–‡)
                 ProcessLoops(doc, dataContext);
 
-                // 2. ´¦Àíµ¥ÖµÌî³ä
-                // Èç¹ûÊÇ List ÉÏÏÂÎÄ£¬È¡µÚÒ»ÌõÊı¾İ×÷Îªµ¥ÖµÌî³äÔ´
+                // 2. å¤„ç†å•å€¼å¡«å……
+                // å¦‚æœæ˜¯ List ä¸Šä¸‹æ–‡ï¼Œå–ç¬¬ä¸€æ¡æ•°æ®ä½œä¸ºå•å€¼å¡«å……æº
                 DynamicCaseData singleData = null;
                 if (dataContext is DynamicCaseData d) singleData = d;
                 else if (dataContext is List<DynamicCaseData> list && list.Count > 0) singleData = list[0];
@@ -117,25 +117,25 @@ namespace docment_tools_client.Services
                     ProcessSingles(doc, singleData);
                 }
 
-                // 3. Ó¦ÓÃÖ»¶Á±£»¤ (Èç¹ûĞèÒª)
+                // 3. åº”ç”¨åªè¯»ä¿æŠ¤ (å¦‚æœéœ€è¦)
                 if (isReadOnly)
                 {
-                    // ÉèÖÃÖ»¶Á±£»¤£¨ÃÜÂëÎª¿Õ»òËæ»ú£¬·ÀÖ¹ÇáÒ×±à¼­£©
+                    // è®¾ç½®åªè¯»ä¿æŠ¤ï¼ˆå¯†ç ä¸ºç©ºæˆ–éšæœºï¼Œé˜²æ­¢è½»æ˜“ç¼–è¾‘ï¼‰
                     // EnforceReadonlyProtection API in NPOI 2.x for XWPF might slightly differ based on version.
                     // Assuming .NET Core NPOI port.
                     
-                    // ·½·¨1: Ê¹ÓÃ EnforceReadonlyProtection (if available)
+                    // æ–¹æ³•1: ä½¿ç”¨ EnforceReadonlyProtection (if available)
                     // doc.EnforceReadonlyProtection("PreviewOnly", NPOI.POIFS.Crypt.HashAlgorithm.sha1);
                     
-                    // ·½·¨2: ¼òµ¥ÉèÖÃ Setting
+                    // æ–¹æ³•2: ç®€å•è®¾ç½® Setting
                     /*
                     if (doc.GetCTDocument().settings == null) doc.GetCTDocument().AddNewSettings();
                     var settings = doc.GetCTDocument().settings;
                     // ... complex XML manipulation ...
                     */
                     
-                    // ¼øÓÚNPOI°æ±¾²îÒì£¬ÕâÀïÊ¹ÓÃ EnforceReadonlyProtection Èç¹û´æÔÚ£¬»ò EnforceUpdateFields Ìæ´ú¸ÉÈÅ?
-                    // Ê¹ÓÃ×îÍ¨ÓÃµÄ doc.EnforceReadonlyProtection()
+                    // é‰´äºNPOIç‰ˆæœ¬å·®å¼‚ï¼Œè¿™é‡Œä½¿ç”¨ EnforceReadonlyProtection å¦‚æœå­˜åœ¨ï¼Œæˆ– EnforceUpdateFields æ›¿ä»£å¹²æ‰°?
+                    // ä½¿ç”¨æœ€é€šç”¨çš„ doc.EnforceReadonlyProtection()
                      try 
                      {
                          doc.EnforceReadonlyProtection("PreviewLock", NPOI.POIFS.Crypt.HashAlgorithm.sha1);
@@ -151,7 +151,7 @@ namespace docment_tools_client.Services
                     doc.Write(outFile);
                 }
                 
-                // 4. ÎÄ¼şÏµÍ³¼¶Ö»¶Á (Ë«ÖØ±£ÕÏ)
+                // 4. æ–‡ä»¶ç³»ç»Ÿçº§åªè¯» (åŒé‡ä¿éšœ)
                 if (isReadOnly && File.Exists(outputFilePath))
                 {
                     try 
@@ -165,15 +165,15 @@ namespace docment_tools_client.Services
             }
             catch (Exception ex)
             {
-                LogHelper.Error("Éú³ÉÎÄÊéÊ§°Ü", ex);
+                LogHelper.Error("ç”Ÿæˆæ–‡ä¹¦å¤±è´¥", ex);
                 return false;
             }
         }
 
         /// <summary>
-        /// ÅúÁ¿Éú³ÉÎÄÊé
+        /// æ‰¹é‡ç”Ÿæˆæ–‡ä¹¦
         /// </summary>
-        public static int BatchGenerateDocumentsFromExcel(string templatePath, string outputDir, List<Dictionary<string, string>> excelRowDatas, string caseKeyField = "°¸¼ş±àºÅ")
+        public static int BatchGenerateDocumentsFromExcel(string templatePath, string outputDir, List<Dictionary<string, string>> excelRowDatas, string caseKeyField = "æ¡ˆä»¶ç¼–å·")
         {
             if (string.IsNullOrEmpty(templatePath) || !File.Exists(templatePath)) 
                 return 0;
@@ -192,7 +192,7 @@ namespace docment_tools_client.Services
                      }
                  }
             }
-            catch (Exception ex) { LogHelper.Error($"¶ÁÈ¡Ä£°åÊ§°Ü£º{ex.Message}"); return 0; }
+            catch (Exception ex) { LogHelper.Error($"è¯»å–æ¨¡æ¿å¤±è´¥ï¼š{ex.Message}"); return 0; }
 
             int successCount = 0;
 
@@ -226,7 +226,7 @@ namespace docment_tools_client.Services
                 }
                 catch (Exception ex)
                 {
-                    LogHelper.Error($"Éú³Éµ¥ÌõÎÄÊéÊ§°Ü", ex);
+                    LogHelper.Error($"ç”Ÿæˆå•æ¡æ–‡ä¹¦å¤±è´¥", ex);
                 }
             }
 
@@ -235,29 +235,29 @@ namespace docment_tools_client.Services
 
         #endregion
 
-        #region Âß¼­ÊµÏÖ - Ñ­»·´¦Àí
+        #region é€»è¾‘å®ç° - å¾ªç¯å¤„ç†
 
         private static void ProcessLoops(XWPFDocument doc, object dataContext)
         {
-            // ´¦Àí±í¸ñÑ­»·
+            // å¤„ç†è¡¨æ ¼å¾ªç¯
             foreach (var table in doc.Tables)
             {
                 ProcessTableLoops(table, dataContext);
             }
             
-            // ´¦ÀíÕıÎÄ¶ÎÂäÑ­»·
+            // å¤„ç†æ­£æ–‡æ®µè½å¾ªç¯
             ProcessBodyLoops(doc, dataContext);
         }
 
         private static void ProcessBodyLoops(XWPFDocument doc, object dataContext)
         {
-            // É¨ÃèÎÄµµBodyÔªËØ
-            // ±ØĞë·´¸´É¨Ãè£¬ÒòÎª²åÈë²Ù×÷»á¸Ä±ä¼¯ºÏ
+            // æ‰«ææ–‡æ¡£Bodyå…ƒç´ 
+            // å¿…é¡»åå¤æ‰«æï¼Œå› ä¸ºæ’å…¥æ“ä½œä¼šæ”¹å˜é›†åˆ
             bool modificationHappened = true;
             while (modificationHappened)
             {
                 modificationHappened = false;
-                var bodyElements = doc.BodyElements; // ÖØĞÂ»ñÈ¡
+                var bodyElements = doc.BodyElements; // é‡æ–°è·å–
                 
                 for (int i = 0; i < bodyElements.Count; i++)
                 {
@@ -271,7 +271,7 @@ namespace docment_tools_client.Services
                         int startIndex = i;
                         int endIndex = -1;
 
-                        // Ñ°ÕÒ½áÊø±ê¼Ç
+                        // å¯»æ‰¾ç»“æŸæ ‡è®°
                         for (int j = i + 1; j < bodyElements.Count; j++)
                         {
                             var e = bodyElements[j];
@@ -289,21 +289,21 @@ namespace docment_tools_client.Services
                         {
                             var listData = GetListDataFromContext(dataContext, key);
 
-                            // 1. È·¶¨Ä£°å·¶Î§ (²»°üº¬StartºÍEnd±ê¼ÇĞĞ)
-                            // ĞŞÕı£ºÊµ¼ÊÉÏÍ¨³£°üº¬ÔÚStart/EndĞĞÖĞ¼äµÄÄÚÈİ¡£
-                            // ÕâÀï¶¨Òå£ºStart±ê¼ÇËùÔÚĞĞ µ½ End±ê¼ÇËùÔÚĞĞ Ö®¼äµÄÄÚÈİÎªÄ£°å¡£
+                            // 1. ç¡®å®šæ¨¡æ¿èŒƒå›´ (ä¸åŒ…å«Startå’ŒEndæ ‡è®°è¡Œ)
+                            // ä¿®æ­£ï¼šå®é™…ä¸Šé€šå¸¸åŒ…å«åœ¨Start/Endè¡Œä¸­é—´çš„å†…å®¹ã€‚
+                            // è¿™é‡Œå®šä¹‰ï¼šStartæ ‡è®°æ‰€åœ¨è¡Œ åˆ° Endæ ‡è®°æ‰€åœ¨è¡Œ ä¹‹é—´çš„å†…å®¹ä¸ºæ¨¡æ¿ã€‚
                             int templateStart = startIndex + 1;
                             int templateEnd = endIndex - 1;
                             
-                            // Ôİ´æÄ£°åÔªËØÒıÓÃ
+                            // æš‚å­˜æ¨¡æ¿å…ƒç´ å¼•ç”¨
                             var templateElems = new List<IBodyElement>();
                             for(int k=templateStart; k<=templateEnd; k++)
                             {
                                 templateElems.Add(bodyElements[k]);
                             }
 
-                            // 2. Ö´ĞĞ²åÈë
-                            // ²åÈëÎ»ÖÃ£ºStart±ê¼ÇËùÔÚÎ»ÖÃ (¼´Ìæ»»Õû¸ö¿é)
+                            // 2. æ‰§è¡Œæ’å…¥
+                            // æ’å…¥ä½ç½®ï¼šStartæ ‡è®°æ‰€åœ¨ä½ç½® (å³æ›¿æ¢æ•´ä¸ªå—)
                             int insertPos = startIndex;
                             
                             if (listData != null)
@@ -314,12 +314,12 @@ namespace docment_tools_client.Services
                                     {
                                         if (tmplElem.ElementType == BodyElementType.PARAGRAPH)
                                         {
-                                            // ´´½¨ĞÂ¶ÎÂä (Ä¬ÈÏÔÚÎÄµµÄ©Î²)
+                                            // åˆ›å»ºæ–°æ®µè½ (é»˜è®¤åœ¨æ–‡æ¡£æœ«å°¾)
                                             var newPara = doc.CreateParagraph();
                                             CopyParagraph((XWPFParagraph)tmplElem, newPara);
                                             ReplaceValuesInParagraph(newPara, dataItem);
                                             
-                                            // ÒÆ¶¯µ½Ö¸¶¨Î»ÖÃ
+                                            // ç§»åŠ¨åˆ°æŒ‡å®šä½ç½®
                                             MoveBodyElement(doc, newPara, insertPos);
                                         }
                                         else if (tmplElem.ElementType == BodyElementType.TABLE)
@@ -335,45 +335,45 @@ namespace docment_tools_client.Services
                                 }
                             }
 
-                            // 3. É¾³ıÔ­Ê¼ Loop ¿é (°üº¬ Start, Template, End)
-                            // ´ËÊ±Ô­Ê¼¿éÒÑ±»ÍÆµ½ insertPos Ö®ºó
-                            // CRITIAL: Çå¿Õ´ıÉ¾³ı¶ÎÂäµÄÎÄ±¾£¬ÒÔ·ÀÖ¹ÔÚ BodyElements »º´æÎ´¸üĞÂµÄÇé¿öÏÂÔÙ´ÎÆ¥Åäµ½ Loop ±ê¼Çµ¼ÖÂËÀÑ­»·
-                            // ¾ÉµÄ Wrapper ÈÔÈ»±£ÁôÔÚ BodyElements ÖĞ (ÒòÎªÎÒÃÇÖ»´Ó XML ÖĞÉ¾³ıÁË)
+                            // 3. åˆ é™¤åŸå§‹ Loop å— (åŒ…å« Start, Template, End)
+                            // æ­¤æ—¶åŸå§‹å—å·²è¢«æ¨åˆ° insertPos ä¹‹å
+                            // CRITIAL: æ¸…ç©ºå¾…åˆ é™¤æ®µè½çš„æ–‡æœ¬ï¼Œä»¥é˜²æ­¢åœ¨ BodyElements ç¼“å­˜æœªæ›´æ–°çš„æƒ…å†µä¸‹å†æ¬¡åŒ¹é…åˆ° Loop æ ‡è®°å¯¼è‡´æ­»å¾ªç¯
+                            // æ—§çš„ Wrapper ä»ç„¶ä¿ç•™åœ¨ BodyElements ä¸­ (å› ä¸ºæˆ‘ä»¬åªä» XML ä¸­åˆ é™¤äº†)
                             
-                            // ×¢Òâ£ºinsertPos Ö¸ÏòµÄÊÇÔ­Ê¼¿é¿ªÊ¼µÄÎ»ÖÃ£¨ÒòÎªËü±»ÉÏÃæµÄ²åÈëÍÆµ½ÁËºóÃæ£©
-                            // µ«ÊÇ BodyElements ÁĞ±íµÄË³Ğò²¢Ã»ÓĞÒòÎª MoveBodyElement ¸Ä±ä (Èç¹ûÎÒÃÇÎŞ·¨Ë¢ĞÂËü)
-                            // BodyElements ÀïµÄ Wrapper Ë³ĞòÈÔÈ»ÊÇ [Start, Tmpl, End, New1, New2...] (Èç¹û New ±»Ìí¼Óµ½ÁËÄ©Î²)
+                            // æ³¨æ„ï¼šinsertPos æŒ‡å‘çš„æ˜¯åŸå§‹å—å¼€å§‹çš„ä½ç½®ï¼ˆå› ä¸ºå®ƒè¢«ä¸Šé¢çš„æ’å…¥æ¨åˆ°äº†åé¢ï¼‰
+                            // ä½†æ˜¯ BodyElements åˆ—è¡¨çš„é¡ºåºå¹¶æ²¡æœ‰å› ä¸º MoveBodyElement æ”¹å˜ (å¦‚æœæˆ‘ä»¬æ— æ³•åˆ·æ–°å®ƒ)
+                            // BodyElements é‡Œçš„ Wrapper é¡ºåºä»ç„¶æ˜¯ [Start, Tmpl, End, New1, New2...] (å¦‚æœ New è¢«æ·»åŠ åˆ°äº†æœ«å°¾)
                             
-                            // ĞŞÕıÂß¼­£º
-                            // Èç¹û `doc.BodyElements` ÊÇ STALE µÄ£¬Ëü»¹ÊÇ [Start(old), Tmpl(old), End(old), New1(latest)...]
-                            // ÎÒÃÇµÄÑ­»·±éÀúµÄÊÇ STALE ÁĞ±í¡£´ËÊ± startIndex Ö¸Ïò Start¡£
-                            // endIndex Ö¸Ïò End¡£
-                            // ÎÒÃÇÉú³ÉµÄ NEW ÔªËØËäÈ»ÔÚ XML ÖĞ±»ÒÆµ½ÁËÇ°Ãæ£¬µ«ÔÚ BODYELEMENTS ÁĞ±íÖĞÊÇÔÚ×îºó¡£
+                            // ä¿®æ­£é€»è¾‘ï¼š
+                            // å¦‚æœ `doc.BodyElements` æ˜¯ STALE çš„ï¼Œå®ƒè¿˜æ˜¯ [Start(old), Tmpl(old), End(old), New1(latest)...]
+                            // æˆ‘ä»¬çš„å¾ªç¯éå†çš„æ˜¯ STALE åˆ—è¡¨ã€‚æ­¤æ—¶ startIndex æŒ‡å‘ Startã€‚
+                            // endIndex æŒ‡å‘ Endã€‚
+                            // æˆ‘ä»¬ç”Ÿæˆçš„ NEW å…ƒç´ è™½ç„¶åœ¨ XML ä¸­è¢«ç§»åˆ°äº†å‰é¢ï¼Œä½†åœ¨ BODYELEMENTS åˆ—è¡¨ä¸­æ˜¯åœ¨æœ€åã€‚
                             
-                            // Òò´Ë£¬ÎÒÃÇ±ØĞëÇå³ı startIndex µ½ endIndex ·¶Î§ÄÚµÄ Wrapper ÄÚÈİ¡£
+                            // å› æ­¤ï¼Œæˆ‘ä»¬å¿…é¡»æ¸…é™¤ startIndex åˆ° endIndex èŒƒå›´å†…çš„ Wrapper å†…å®¹ã€‚
                             for(int k = startIndex; k <= endIndex; k++)
                             {
                                 if(bodyElements[k] is XWPFParagraph p)
                                 {
-                                    // Çå¿ÕÎÄ±¾ runs
+                                    // æ¸…ç©ºæ–‡æœ¬ runs
                                     while(p.Runs.Count > 0) p.RemoveRun(0);
-                                    // Èç¹ûÓĞ Text (rare), reset
+                                    // å¦‚æœæœ‰ Text (rare), reset
                                     // p.GetCTP().SetValue(""); // Not easy on high level
                                 }
                                 // Table wrapper? Table doesn't trigger regex match in this loop.
                             }
 
-                            // É¾³ıÎ»ÖÃ: insertPos
-                            // ×¢Òâ£ºremoveBodyElements ÊÇ»ùÓÚ XML Ë÷Òı²Ù×÷µÄ¡£
-                            // µ±ÎÒÃÇ²åÈëÁË N ¸öĞÂÔªËØ²¢ÒÆµ½ startIndex ´¦£¬Ô­À´µÄ XML ÔªËØÈ·Êµ±»ÍÆµ½ÁË startIndex + N (¼´ current insertPos)¡£
-                            // ËùÒÔ´Ó insertPos ¿ªÊ¼ÒÆ³ı countToRemove ¸öÔªËØ£¬È·ÊµÒÆ³ıÁË¾ÉµÄ XML ½Úµã¡£
-                            // ÕâÊÇÕıÈ·µÄ¡£
+                            // åˆ é™¤ä½ç½®: insertPos
+                            // æ³¨æ„ï¼šremoveBodyElements æ˜¯åŸºäº XML ç´¢å¼•æ“ä½œçš„ã€‚
+                            // å½“æˆ‘ä»¬æ’å…¥äº† N ä¸ªæ–°å…ƒç´ å¹¶ç§»åˆ° startIndex å¤„ï¼ŒåŸæ¥çš„ XML å…ƒç´ ç¡®å®è¢«æ¨åˆ°äº† startIndex + N (å³ current insertPos)ã€‚
+                            // æ‰€ä»¥ä» insertPos å¼€å§‹ç§»é™¤ countToRemove ä¸ªå…ƒç´ ï¼Œç¡®å®ç§»é™¤äº†æ—§çš„ XML èŠ‚ç‚¹ã€‚
+                            // è¿™æ˜¯æ­£ç¡®çš„ã€‚
                             
                             int countToRemove = endIndex - startIndex + 1;
                             RemoveBodyElements(doc, insertPos, countToRemove);
 
                             modificationHappened = true;
-                            break; // ÖØĞÂÉ¨Ãè
+                            break; // é‡æ–°æ‰«æ
 
                         }
                     }
@@ -395,7 +395,7 @@ namespace docment_tools_client.Services
                     int startIndex = i;
                     int endIndex = -1;
 
-                    // Ñ°ÕÒ½áÊøĞĞ
+                    // å¯»æ‰¾ç»“æŸè¡Œ
                     for (int j = i; j < table.Rows.Count; j++)
                     {
                         var loopEndMatch = Regex.Match(GetRowText(table.Rows[j]), @"\{\{LOOP_" + key + @"_END\}\}");
@@ -412,14 +412,14 @@ namespace docment_tools_client.Services
                         int insertPos = endIndex + 1;
                         int templateRowCount = endIndex - startIndex + 1;
                         
-                        // ²¶»ñÄ£°åĞĞ£¨ÒıÓÃ£©ÒÔ±ã¸´ÖÆ
-                        // ×¢Òâ£ºÎÒÃÇ²»ÄÜÒ»±ß²åÈëÒ»±ß¶ÁÈ¡Ä£°å£¬Èç¹ûÔÚÍ¬Ò»±íÖĞ£¬²åÈë»á¸Ä±äË÷Òı
-                        // µ«ÎÒÃÇ¼ÇÂ¼ÁË startIndex ºÍ endIndex£¬Õâ·¶Î§ÄÚµÄ¾ÍÊÇÄ£°å¡£
-                        // ÎÒÃÇĞèÒª "Manual Clone" ÕâÒ»×éĞĞ
+                        // æ•è·æ¨¡æ¿è¡Œï¼ˆå¼•ç”¨ï¼‰ä»¥ä¾¿å¤åˆ¶
+                        // æ³¨æ„ï¼šæˆ‘ä»¬ä¸èƒ½ä¸€è¾¹æ’å…¥ä¸€è¾¹è¯»å–æ¨¡æ¿ï¼Œå¦‚æœåœ¨åŒä¸€è¡¨ä¸­ï¼Œæ’å…¥ä¼šæ”¹å˜ç´¢å¼•
+                        // ä½†æˆ‘ä»¬è®°å½•äº† startIndex å’Œ endIndexï¼Œè¿™èŒƒå›´å†…çš„å°±æ˜¯æ¨¡æ¿ã€‚
+                        // æˆ‘ä»¬éœ€è¦ "Manual Clone" è¿™ä¸€ç»„è¡Œ
                         
-                        // ÏÈÒÆ³ı±ê¼ÇÎÄ±¾£¨ÔÚÉú³ÉÇ°£¬ÎªÁË±ÜÃâ¸´ÖÆºóµÄĞĞÒ²´ø±ê¼Ç£©
-                        // ²»£¬Ó¦¸ÃÉú³ÉºóÔÙÒÆ³ı£¿»òÕßÉú³ÉÊ±Ìæ»»¡£
-                        // ²ßÂÔ£º±£ÁôÄ£°å²»¶¯£¬×îºóÉ¾³ı¡£
+                        // å…ˆç§»é™¤æ ‡è®°æ–‡æœ¬ï¼ˆåœ¨ç”Ÿæˆå‰ï¼Œä¸ºäº†é¿å…å¤åˆ¶åçš„è¡Œä¹Ÿå¸¦æ ‡è®°ï¼‰
+                        // ä¸ï¼Œåº”è¯¥ç”Ÿæˆåå†ç§»é™¤ï¼Ÿæˆ–è€…ç”Ÿæˆæ—¶æ›¿æ¢ã€‚
+                        // ç­–ç•¥ï¼šä¿ç•™æ¨¡æ¿ä¸åŠ¨ï¼Œæœ€ååˆ é™¤ã€‚
                         
                         if (listData != null && listData.Count > 0)
                         {
@@ -431,10 +431,10 @@ namespace docment_tools_client.Services
                                     var newRow = table.InsertNewTableRow(insertPos);
                                     CopyRow(sourceRow, newRow);
                                     
-                                    // Ìæ»»±äÁ¿
+                                    // æ›¿æ¢å˜é‡
                                     ReplaceValuesInRow(newRow, item);
                                     
-                                    // ÒÆ³ı Loop ±ê¼Ç (New Row)
+                                    // ç§»é™¤ Loop æ ‡è®° (New Row)
                                     ReplaceTextInRow(newRow, startMatch.Value, "");
                                     ReplaceTextInRow(newRow, $"{{{{LOOP_{key}_END}}}}", "");
                                     
@@ -443,13 +443,13 @@ namespace docment_tools_client.Services
                             }
                         }
 
-                        // É¾³ıÔ­Ê¼Ä£°åĞĞ
+                        // åˆ é™¤åŸå§‹æ¨¡æ¿è¡Œ
                         for (int k = 0; k < templateRowCount; k++)
                         {
                             table.RemoveRow(startIndex);
                         }
                         
-                        // ĞŞÕıÑ­»·Ë÷Òı
+                        // ä¿®æ­£å¾ªç¯ç´¢å¼•
                         int addedRows = (listData?.Count ?? 0) * templateRowCount;
                         i = startIndex + addedRows - 1;
                     }
@@ -459,7 +459,7 @@ namespace docment_tools_client.Services
 
         #endregion
 
-        #region Âß¼­ÊµÏÖ - µ¥Öµ´¦Àí
+        #region é€»è¾‘å®ç° - å•å€¼å¤„ç†
 
         private static void ProcessSingles(XWPFDocument doc, DynamicCaseData caseData)
         {
@@ -481,7 +481,7 @@ namespace docment_tools_client.Services
 
         #endregion
 
-        #region ¸¨Öú·½·¨
+        #region è¾…åŠ©æ–¹æ³•
 
         private static string GetRowText(XWPFTableRow row)
         {
@@ -516,31 +516,31 @@ namespace docment_tools_client.Services
             return null;
         }
 
-        // ĞÂÔö¸¨Öú·½·¨£ºÍ³Ò»´ÓÉÏÏÂÎÄ»ñÈ¡ List Êı¾İ
+        // æ–°å¢è¾…åŠ©æ–¹æ³•ï¼šç»Ÿä¸€ä»ä¸Šä¸‹æ–‡è·å– List æ•°æ®
         private static List<IDictionary<string, object>>? GetListDataFromContext(object context, string loopKey)
         {
-            // Ô²¼û 1: ÉÏÏÂÎÄ±¾Éí¾ÍÊÇÁĞ±í (¶ÔÓ¦ "Ìî³äÈËÊı" ·Ö¸îºóµÄ Chunk)
-            // ´ËÊ±ºöÂÔ loopKey (»òÕß loopKey ½ö×÷Îª±êÊ¶£¬ÁĞ±íÖ±½ÓÊ¹ÓÃ)
-            // ĞèÇó£º"Ê¶±ğ Loop ±ê¼Ç...°´·Ö¸îºóµÄ×ÓÊı×éÌõÊıÑ­»·Ìî³ä"
-            // ÕâÒâÎ¶×Å loopKey ¼´Ê¹ÊÇ Person£¬Èç¹û´«ÈëµÄÊÇ List<Case>£¬¾ÍÓÃ List<Case> Ìî³ä
-            // µ«Èç¹ûÎÄµµÓĞ¶à¸ö²»Í¬ Loop ÄØ£¿"Í¬Ò»Ä£°åÖĞµ¥¸öÑ­»·±êÊ¶½ö¶ÔÓ¦Ò»×é Excel Êı¾İÁĞ"
-            // Õâ°µÊ¾Í¨³£Ö»ÓĞÒ»¸öÖ÷Ñ­»·£¬»òÕß¶à¸öÑ­»·¶¼Ö¸´úÍ¬Ò»×éÊı¾İ¡£
+            // åœ†è§ 1: ä¸Šä¸‹æ–‡æœ¬èº«å°±æ˜¯åˆ—è¡¨ (å¯¹åº” "å¡«å……äººæ•°" åˆ†å‰²åçš„ Chunk)
+            // æ­¤æ—¶å¿½ç•¥ loopKey (æˆ–è€… loopKey ä»…ä½œä¸ºæ ‡è¯†ï¼Œåˆ—è¡¨ç›´æ¥ä½¿ç”¨)
+            // éœ€æ±‚ï¼š"è¯†åˆ« Loop æ ‡è®°...æŒ‰åˆ†å‰²åçš„å­æ•°ç»„æ¡æ•°å¾ªç¯å¡«å……"
+            // è¿™æ„å‘³ç€ loopKey å³ä½¿æ˜¯ Personï¼Œå¦‚æœä¼ å…¥çš„æ˜¯ List<Case>ï¼Œå°±ç”¨ List<Case> å¡«å……
+            // ä½†å¦‚æœæ–‡æ¡£æœ‰å¤šä¸ªä¸åŒ Loop å‘¢ï¼Ÿ"åŒä¸€æ¨¡æ¿ä¸­å•ä¸ªå¾ªç¯æ ‡è¯†ä»…å¯¹åº”ä¸€ç»„ Excel æ•°æ®åˆ—"
+            // è¿™æš—ç¤ºé€šå¸¸åªæœ‰ä¸€ä¸ªä¸»å¾ªç¯ï¼Œæˆ–è€…å¤šä¸ªå¾ªç¯éƒ½æŒ‡ä»£åŒä¸€ç»„æ•°æ®ã€‚
             if (context is List<DynamicCaseData> caseList)
             {
-                // ½« DynamicCaseData ÁĞ±í×ª»»Îª IDictionary ÁĞ±í¹©Ìæ»»Ê¹ÓÃ
+                // å°† DynamicCaseData åˆ—è¡¨è½¬æ¢ä¸º IDictionary åˆ—è¡¨ä¾›æ›¿æ¢ä½¿ç”¨
                 return caseList.Select(c => c.CaseInfo).ToList<IDictionary<string, object>>();
             }
 
-            // Ô²¼û 2: ÉÏÏÂÎÄÊÇµ¥¸ö DynamicCaseData (¾ÉÂß¼­£¬¶ÔÏóÄÚ°üº¬ List ÊôĞÔ)
+            // åœ†è§ 2: ä¸Šä¸‹æ–‡æ˜¯å•ä¸ª DynamicCaseData (æ—§é€»è¾‘ï¼Œå¯¹è±¡å†…åŒ…å« List å±æ€§)
             if (context is DynamicCaseData singleCase)
             {
-                // ³¢ÊÔ´Ó CaseInfo ÖĞ»ñÈ¡ÃûÎª loopKey µÄÁĞ±í
+                // å°è¯•ä» CaseInfo ä¸­è·å–åä¸º loopKey çš„åˆ—è¡¨
                 if (singleCase.CaseInfo.TryGetValue(loopKey, out var val))
                 {
                      if (val is List<Dictionary<string, object>> list) 
-                        return list.Cast<IDictionary<string, object>>().ToList(); // ×ª»»ÀàĞÍÊÊÅä
+                        return list.Cast<IDictionary<string, object>>().ToList(); // è½¬æ¢ç±»å‹é€‚é…
                      
-                     // Ö§³Ö JSON ×Ö·û´®
+                     // æ”¯æŒ JSON å­—ç¬¦ä¸²
                      if (val is string str && str.Trim().StartsWith("[") && str.Trim().EndsWith("]"))
                      {
                          try { return JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(str)?.Cast<IDictionary<string, object>>().ToList(); } catch { }
@@ -549,7 +549,7 @@ namespace docment_tools_client.Services
                 }
             }
             
-            LogHelper.Warn($"Î´ÕÒµ½Ñ­»·Êı¾İ£ºKey={loopKey}, ContextType={context?.GetType().Name}");
+            LogHelper.Warn($"æœªæ‰¾åˆ°å¾ªç¯æ•°æ®ï¼šKey={loopKey}, ContextType={context?.GetType().Name}");
             return null;
         }
 
@@ -568,29 +568,29 @@ namespace docment_tools_client.Services
         {
             if (data == null) return;
             string text = para.ParagraphText;
-            // ¿íËÉ¼ì²é£¬ÒòÎª¿ÉÄÜ°üº¬ÆäËû±ê¼Ç
+            // å®½æ¾æ£€æŸ¥ï¼Œå› ä¸ºå¯èƒ½åŒ…å«å…¶ä»–æ ‡è®°
             if (string.IsNullOrEmpty(text) || !text.Contains("{{")) return;
 
-            // ÓÅÏÈÌæ»»×î³¤Æ¥ÅäµÄ¼ü£¬±ÜÃâ²¿·ÖÆ¥ÅäÎÊÌâ
-            // µ«ÕâÀï±éÀúË³Ğò²»¿É¿Ø£¬ÇÒNPOIÌæ»»»á¸Ä±äParagraphText 
-            // ½¨Òé£ºÊÕ¼¯ËùÓĞÆ¥ÅäÏî£¬ÔÙÒ»´ÎĞÔÌæ»»? NPOI Run²Ù×÷±È½Ï¸´ÔÓ¡£
-            // Î¬³ÖÏÖ×´£¬µ«Ìí¼ÓLogµ÷ÊÔ
+            // ä¼˜å…ˆæ›¿æ¢æœ€é•¿åŒ¹é…çš„é”®ï¼Œé¿å…éƒ¨åˆ†åŒ¹é…é—®é¢˜
+            // ä½†è¿™é‡Œéå†é¡ºåºä¸å¯æ§ï¼Œä¸”NPOIæ›¿æ¢ä¼šæ”¹å˜ParagraphText 
+            // å»ºè®®ï¼šæ”¶é›†æ‰€æœ‰åŒ¹é…é¡¹ï¼Œå†ä¸€æ¬¡æ€§æ›¿æ¢? NPOI Runæ“ä½œæ¯”è¾ƒå¤æ‚ã€‚
+            // ç»´æŒç°çŠ¶ï¼Œä½†æ·»åŠ Logè°ƒè¯•
 
             foreach (var kv in data)
             {
                 string key = kv.Key;
                 string placeholder = $"{{{{{key}}}}}";
                 
-                // ¼ì²é¶ÎÂäÊÇ·ñ°üº¬¸ÃÕ¼Î»·û
+                // æ£€æŸ¥æ®µè½æ˜¯å¦åŒ…å«è¯¥å ä½ç¬¦
                 if (text.Contains(placeholder))
                 {
                     string val = kv.Value?.ToString() ?? "";
-                    // µ÷ÊÔÈÕÖ¾£º·¢ÏÖÕ¼Î»·û
+                    // è°ƒè¯•æ—¥å¿—ï¼šå‘ç°å ä½ç¬¦
                     // LogHelper.Debug($"Replacing [{placeholder}] with [{val}] in paragraph: {text.Substring(0, Math.Min(text.Length, 20))}...");
                     
                     ReplaceTextInParagraph(para, placeholder, val);
                     
-                    // ¸üĞÂtextÒÔ±ãºóĞøÆ¥Åä£¨ËäÈ»ReplaceTextInParagraphÄÚ²¿ÒÑ¾­ĞŞ¸ÄÁËruns£¬ParagraphTextÊôĞÔÓ¦¸ÃÊÇ¼ÆËã³öÀ´µÄ£©
+                    // æ›´æ–°textä»¥ä¾¿åç»­åŒ¹é…ï¼ˆè™½ç„¶ReplaceTextInParagraphå†…éƒ¨å·²ç»ä¿®æ”¹äº†runsï¼ŒParagraphTextå±æ€§åº”è¯¥æ˜¯è®¡ç®—å‡ºæ¥çš„ï¼‰
                     text = para.ParagraphText;
                 }
             }
@@ -601,7 +601,7 @@ namespace docment_tools_client.Services
             var text = para.ParagraphText;
             if (!text.Contains(placeholder)) return;
 
-            // 1. ³¢ÊÔÔÚµ¥¸öRunÖĞ²éÕÒ (Simple replace)
+            // 1. å°è¯•åœ¨å•ä¸ªRunä¸­æŸ¥æ‰¾ (Simple replace)
             foreach (var run in para.Runs)
             {
                 string runText = run.Text;
@@ -612,16 +612,16 @@ namespace docment_tools_client.Services
                 }
             }
 
-            // 2. ¿ç Run ²éÕÒ (Complex replace)
-            // ÕâÖÖÇé¿öÏÂ£¬Õ¼Î»·û±»·Ö¸îµ½ÁË¶à¸öRunÖĞ£¬±ÈÈç "{{" ÔÚ Run1, "Key" ÔÚ Run2, "}}" ÔÚ Run3
-            // ¼òµ¥´¦Àí£ºÖØÖÃµÚÒ»¸öRunÎªÈ«ÎÄÌæ»»ºóµÄ½á¹û£¬Çå¿ÕÆäËûRuns¡£
-            // È±µã£º»á¶ªÊ§¶ÎÂäÖĞÆäËûµÄ¸ñÊ½£¨ÈçÑÕÉ«¼Ó´Ö²»Ò»ÖÂµÄ²¿·Ö£©¡£
-            // µ«ÎªÁË±£Ö¤Ìæ»»³É¹¦£¬ÕâÊÇ³£ÓÃÍ×Ğ­·½°¸¡£
+            // 2. è·¨ Run æŸ¥æ‰¾ (Complex replace)
+            // è¿™ç§æƒ…å†µä¸‹ï¼Œå ä½ç¬¦è¢«åˆ†å‰²åˆ°äº†å¤šä¸ªRunä¸­ï¼Œæ¯”å¦‚ "{{" åœ¨ Run1, "Key" åœ¨ Run2, "}}" åœ¨ Run3
+            // ç®€å•å¤„ç†ï¼šé‡ç½®ç¬¬ä¸€ä¸ªRunä¸ºå…¨æ–‡æ›¿æ¢åçš„ç»“æœï¼Œæ¸…ç©ºå…¶ä»–Runsã€‚
+            // ç¼ºç‚¹ï¼šä¼šä¸¢å¤±æ®µè½ä¸­å…¶ä»–çš„æ ¼å¼ï¼ˆå¦‚é¢œè‰²åŠ ç²—ä¸ä¸€è‡´çš„éƒ¨åˆ†ï¼‰ã€‚
+            // ä½†ä¸ºäº†ä¿è¯æ›¿æ¢æˆåŠŸï¼Œè¿™æ˜¯å¸¸ç”¨å¦¥åæ–¹æ¡ˆã€‚
 
             string fullText = para.ParagraphText;
             string replacedText = fullText.Replace(placeholder, newText);
             
-            // Èç¹ûÌæ»»ÎŞĞ§£¨ÀíÂÛÉÏContainsÒÑ¼ì²é£©£¬ÍË³ö
+            // å¦‚æœæ›¿æ¢æ— æ•ˆï¼ˆç†è®ºä¸ŠContainså·²æ£€æŸ¥ï¼‰ï¼Œé€€å‡º
             if (fullText == replacedText) return;
 
             if (para.Runs.Count > 0)
@@ -629,7 +629,7 @@ namespace docment_tools_client.Services
                 var firstRun = para.Runs[0];
                 firstRun.SetText(replacedText, 0);
                 
-                // ±ØĞëµ¹ĞòÉ¾³ı
+                // å¿…é¡»å€’åºåˆ é™¤
                 for (int i = para.Runs.Count - 1; i > 0; i--)
                 {
                     para.RemoveRun(i);
@@ -637,35 +637,35 @@ namespace docment_tools_client.Services
             }
             else
             {
-                // ÎŞRunµ«ÓĞText? ¿ÉÄÜÊÇNPOI Text»º´æ¡£´´½¨ĞÂRun¡£
+                // æ— Runä½†æœ‰Text? å¯èƒ½æ˜¯NPOI Textç¼“å­˜ã€‚åˆ›å»ºæ–°Runã€‚
                 para.CreateRun().SetText(replacedText);
             }
         }
 
         #endregion
 
-        #region ÑùÊ½¸´ÖÆ¸¨Öú·½·¨ (Manual Deep Copy)
+        #region æ ·å¼å¤åˆ¶è¾…åŠ©æ–¹æ³• (Manual Deep Copy)
 
         private static void CopyRow(XWPFTableRow source, XWPFTableRow target)
         {
-            // ¸´ÖÆĞĞÊôĞÔ
+            // å¤åˆ¶è¡Œå±æ€§
             if (source.GetCTRow().trPr != null)
             {
                 target.GetCTRow().trPr = source.GetCTRow().trPr;
             }
 
-            // ¸´ÖÆµ¥Ôª¸ñ
-            // InsertNewTableRow ¿ÉÄÜ»á´´½¨Ò»¸ö¿Õµ¥Ôª¸ñ»òÎŞµ¥Ôª¸ñ£¬ÊÓ°æ±¾¶ø¶¨¡£
-            // ¼ì²é Target µ¥Ôª¸ñÊı
+            // å¤åˆ¶å•å…ƒæ ¼
+            // InsertNewTableRow å¯èƒ½ä¼šåˆ›å»ºä¸€ä¸ªç©ºå•å…ƒæ ¼æˆ–æ— å•å…ƒæ ¼ï¼Œè§†ç‰ˆæœ¬è€Œå®šã€‚
+            // æ£€æŸ¥ Target å•å…ƒæ ¼æ•°
             var sourceCells = source.GetTableCells();
             var targetCells = target.GetTableCells();
 
-            // Èç¹û Target ÒÑ¾­ÓĞÄ¬ÈÏµ¥Ôª¸ñ£¨Í¨³£ÓĞ1¸ö£©£¬ÏÈÀûÓÃËü£¬²»×ãµÄ´´½¨
-            // Èç¹û Target Îª¿Õ£¬È«²¿´´½¨
-            // Îª¼òµ¥Æğ¼û£¬Çå³ı Target ÏÖÓĞ£¨Èç¹ûÓĞ API£©£¬»òÕß¸²¸Ç
+            // å¦‚æœ Target å·²ç»æœ‰é»˜è®¤å•å…ƒæ ¼ï¼ˆé€šå¸¸æœ‰1ä¸ªï¼‰ï¼Œå…ˆåˆ©ç”¨å®ƒï¼Œä¸è¶³çš„åˆ›å»º
+            // å¦‚æœ Target ä¸ºç©ºï¼Œå…¨éƒ¨åˆ›å»º
+            // ä¸ºç®€å•èµ·è§ï¼Œæ¸…é™¤ Target ç°æœ‰ï¼ˆå¦‚æœæœ‰ APIï¼‰ï¼Œæˆ–è€…è¦†ç›–
             
-            // ¶àÊıÇé¿ö InsertNewTableRow(i) ´´½¨µÄĞĞ°üº¬ 1 ¸ö¿Õµ¥Ôª¸ñ
-            // ÎÒÃÇĞèÒª¶ÔÆëÊıÁ¿
+            // å¤šæ•°æƒ…å†µ InsertNewTableRow(i) åˆ›å»ºçš„è¡ŒåŒ…å« 1 ä¸ªç©ºå•å…ƒæ ¼
+            // æˆ‘ä»¬éœ€è¦å¯¹é½æ•°é‡
             
             for (int i = 0; i < sourceCells.Count; i++)
             {
@@ -679,20 +679,20 @@ namespace docment_tools_client.Services
 
         private static void CopyCell(XWPFTableCell source, XWPFTableCell target)
         {
-            // ¸´ÖÆÊôĞÔ
+            // å¤åˆ¶å±æ€§
             if (source.GetCTTc().tcPr != null)
             {
                 target.GetCTTc().tcPr = source.GetCTTc().tcPr;
             }
 
-            // Çå³ı Target Ä¬ÈÏ¶ÎÂä£¨Í¨³£ĞÂ½¨ Cell »á´øÒ»¸ö¿Õ¶ÎÂä£©
-            // NPOI ÖĞ RemoveParagraph ĞèÒª index
+            // æ¸…é™¤ Target é»˜è®¤æ®µè½ï¼ˆé€šå¸¸æ–°å»º Cell ä¼šå¸¦ä¸€ä¸ªç©ºæ®µè½ï¼‰
+            // NPOI ä¸­ RemoveParagraph éœ€è¦ index
             while(target.Paragraphs.Count > 0)
             {
                 target.RemoveParagraph(0);
             }
 
-            // ¸´ÖÆ¶ÎÂä
+            // å¤åˆ¶æ®µè½
             foreach (var para in source.Paragraphs)
             {
                 var newPara = target.AddParagraph();
@@ -702,13 +702,13 @@ namespace docment_tools_client.Services
 
         private static void CopyParagraph(XWPFParagraph source, XWPFParagraph target)
         {
-            // ¸´ÖÆ¶ÎÂäÊôĞÔ
+            // å¤åˆ¶æ®µè½å±æ€§
             if (source.GetCTP().pPr != null)
             {
                 target.GetCTP().pPr = source.GetCTP().pPr;
             }
 
-            // ¸´ÖÆ Runs
+            // å¤åˆ¶ Runs
             foreach (var run in source.Runs)
             {
                 var newRun = target.CreateRun();
@@ -718,7 +718,7 @@ namespace docment_tools_client.Services
 
         private static void CopyRun(XWPFRun source, XWPFRun target)
         {
-            // ¸´ÖÆ Run ÊôĞÔ
+            // å¤åˆ¶ Run å±æ€§
             if (source.GetCTR().rPr != null)
             {
                 target.GetCTR().rPr = source.GetCTR().rPr;
@@ -728,14 +728,14 @@ namespace docment_tools_client.Services
 
         private static void CopyTable(XWPFTable source, XWPFTable target)
         {
-             // ¸´ÖÆ±í¸ñÊôĞÔ
+             // å¤åˆ¶è¡¨æ ¼å±æ€§
              if (source.GetCTTbl().tblPr != null)
              {
                  target.GetCTTbl().tblPr = source.GetCTTbl().tblPr;
              }
              
-             // ¸´ÖÆĞĞ
-             // target Ä¬ÈÏÓĞ1ĞĞ
+             // å¤åˆ¶è¡Œ
+             // target é»˜è®¤æœ‰1è¡Œ
              target.RemoveRow(0);
              
              foreach(var row in source.Rows)
@@ -753,7 +753,7 @@ namespace docment_tools_client.Services
              dynamic dBody = body;
              System.Collections.IList items = dBody.Items;
              
-             object ctObj = null;
+             object? ctObj = null;
              if(elem is XWPFParagraph p) ctObj = p.GetCTP();
              else if(elem is XWPFTable t) ctObj = t.GetCTTbl();
              
@@ -788,17 +788,17 @@ namespace docment_tools_client.Services
              }
         }
         
-        // ICursor ½Ó¿ÚÉùÃ÷£¬±ÜÃâÒıÓÃ´íÎó (NPOI.XWPF.UserModel Ã»ÓĞÖ±½Ó±©Â¶ ICursor ½Ó¿Ú£¬¶øÊÇ XmlCursor?)
+        // ICursor æ¥å£å£°æ˜ï¼Œé¿å…å¼•ç”¨é”™è¯¯ (NPOI.XWPF.UserModel æ²¡æœ‰ç›´æ¥æš´éœ² ICursor æ¥å£ï¼Œè€Œæ˜¯ XmlCursor?)
 
-        // ÔÚ C# NPOI ÖĞ£¬newCursor ·µ»ØµÄÊÇ XmlCursor ÀàĞÍ (System.Xml.XmlObject µÄÒ»²¿·Ö?)
-        // Êµ¼ÊÉÏ NPOI 2.x .NET ÊÇ»ùÓÚ OpenXmlFormats£¬µ×²ã xmlbean Ö»ÓĞ²¿·Ö±©Â¶
-        // Èç¹ûÎŞ·¨Ê¹ÓÃ Cursor£¬ProcessBodyLoops Ö»ÄÜÔİÊ±¸éÖÃÂß¼­
+        // åœ¨ C# NPOI ä¸­ï¼ŒnewCursor è¿”å›çš„æ˜¯ XmlCursor ç±»å‹ (System.Xml.XmlObject çš„ä¸€éƒ¨åˆ†?)
+        // å®é™…ä¸Š NPOI 2.x .NET æ˜¯åŸºäº OpenXmlFormatsï¼Œåº•å±‚ xmlbean åªæœ‰éƒ¨åˆ†æš´éœ²
+        // å¦‚æœæ— æ³•ä½¿ç”¨ Cursorï¼ŒProcessBodyLoops åªèƒ½æš‚æ—¶æç½®é€»è¾‘
         private interface ICursor 
         { 
              void toNextToken(); 
              // ... dummy interface for code structure if needed, but logic commented out
         } 
-        // Êµ¼ÊÂß¼­ÖĞÒÑÊ¹ÓÃ dynamic »ò object Ìæ´ú£¬Èç¹ûÎŞ·¨±àÒëÔòÉ¾³ıÏà¹ØĞĞ
+        // å®é™…é€»è¾‘ä¸­å·²ä½¿ç”¨ dynamic æˆ– object æ›¿ä»£ï¼Œå¦‚æœæ— æ³•ç¼–è¯‘åˆ™åˆ é™¤ç›¸å…³è¡Œ
 
         #endregion
 

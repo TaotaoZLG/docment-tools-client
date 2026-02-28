@@ -22,25 +22,26 @@ namespace docment_tools_client.Views
     /// </summary>
     public partial class DocumentGenerateView : Page
     {
-        private readonly DocumentGenerateViewModel _viewModel;
+        public UserInfo UserInfo { get; set; }
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="currentUser">当前登录用户信息（从MainViewModel传递）</param>
+        /// <param name="userInfo">当前登录用户信息（从MainViewModel传递）</param>
         public DocumentGenerateView(UserInfo userInfo)
         {
             InitializeComponent();
 
+            UserInfo = userInfo;
+
             // 初始化专属VM
-            _viewModel = new DocumentGenerateViewModel(userInfo);
-            DataContext = _viewModel;
+            DataContext = new DocumentGenerateViewModel(userInfo);
         }
 
         // 页面卸载时释放资源
-        private void Page_Unloaded(object sender, RoutedEventArgs e)
-        {
-            _viewModel.Dispose();
-        }
+        //private void Page_Unloaded(object sender, RoutedEventArgs e)
+        //{
+        //    _viewModel.Dispose();
+        //}
     }
 }

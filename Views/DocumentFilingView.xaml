@@ -1,0 +1,187 @@
+﻿<Page x:Class="docment_tools_client.Views.DocumentFilingView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mui="http://schemas.modernwpf.com/2019"
+      xmlns:helpers="clr-namespace:docment_tools_client.Helpers"
+      xmlns:local="clr-namespace:docment_tools_client.Views"
+      mc:Ignorable="d"
+      Title="文档归档工具">
+
+    <!-- 复用项目现有样式资源 -->
+    <Page.Resources>
+        <CornerRadius x:Key="ContainerCornerRadius">8</CornerRadius>
+        <DropShadowEffect x:Key="ContainerShadow" Color="Black" Opacity="0.05" BlurRadius="8" ShadowDepth="2"/>
+        <Style x:Key="LogListViewItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Style.Triggers>
+                <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                    <Setter Property="Background" Value="#F0F2F5"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="FilingTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1.4*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 左侧功能区 -->
+        <Border Grid.Column="0" Margin="0,0,12,0" CornerRadius="{StaticResource ContainerCornerRadius}" 
+                Background="#F8F9FA" BorderBrush="#E5E5E5" BorderThickness="1"
+                Effect="{StaticResource ContainerShadow}">
+            <Grid Margin="15">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                              HorizontalScrollBarVisibility="Hidden"
+                              Padding="0,0,8,0">
+                    <StackPanel>
+                        <!-- 1. 压缩包选择与解压归档 -->
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <mui:SymbolIcon Symbol="Folder" Margin="0,0,12,0" Foreground="#0078D7"/>
+                                <TextBlock Text="1. 压缩包解压归档" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,8"/>
+                            <Grid Margin="30,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding SourcePath}" IsReadOnly="True" Margin="0,0,12,0" Height="32"/>
+                                <Button Grid.Column="1" Content="选择压缩包/文件夹" Command="{Binding SelectSourcePathCommand}"
+                                        Padding="12,6" Height="32"/>
+                            </Grid>
+                            <!-- 归档规则优先级选择 -->
+                            <StackPanel Margin="30,12,0,0">
+                                <TextBlock Text="归档规则优先级（自动匹配文件名）" Style="{StaticResource FilingTextStyle}" Foreground="Gray"/>
+                                <ListView ItemsSource="{Binding FilingRuleList}" 
+                                          SelectedItem="{Binding SelectedFilingRule}"
+                                          Margin="0,6,0,10" Height="90" SelectionMode="Single">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding RuleName}" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                                <Button Content="开始处理并归档" Command="{Binding ProcessSourceAndArchiveCommand}"
+                                        Padding="12,6" HorizontalAlignment="Left" Height="32"
+                                        Background="#0078D7" Foreground="White" BorderThickness="0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 2. OCR识别与Excel生成（新增Excel模板上传） -->
+                        <StackPanel Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <mui:SymbolIcon Symbol="Next" Margin="0,0,12,0" Foreground="#0078D7"/>
+                                <TextBlock Text="2. 图片OCR识别 &amp; Excel生成" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,8"/>
+                            <StackPanel Margin="30,0,0,0">
+                                <!-- 新增：Excel模板上传 -->
+                                <TextBlock Text="Excel模板（可选）" Style="{StaticResource FilingTextStyle}" Foreground="Gray" Margin="0,0,0,4"/>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding ExcelTemplateFilePath}" IsReadOnly="True" Margin="0,0,12,0" Height="32"/>
+                                    <Button Grid.Column="1" Content="选择模板" Command="{Binding SelectExcelTemplateCommand}"
+                                            Padding="12,6" Height="32"/>
+                                </Grid>
+                                <!-- OCR语言选择 -->
+                                <ComboBox ItemsSource="{Binding OcrLanguageList}" 
+                                          SelectedItem="{Binding SelectedOcrLanguage}"
+                                          Margin="0,0,0,8" Width="150" Height="28"/>
+                                <!-- 识别生成按钮 -->
+                                <Button Content="识别图片并生成Excel" Command="{Binding OcrAndGenerateExcelCommand}"
+                                        Padding="12,6" HorizontalAlignment="Left" Height="32"
+                                        Background="#0078D7" Foreground="White" BorderThickness="0"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- 3. 归档文件导出 -->
+                        <StackPanel Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <mui:SymbolIcon Symbol="Save" Margin="0,0,12,0" Foreground="#0078D7"/>
+                                <TextBlock Text="3. 归档文件导出" FontSize="14" FontWeight="Bold"/>
+                            </StackPanel>
+                            <Separator Margin="0,0,0,8"/>
+                            <Grid Margin="30,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Text="{Binding ExportFolderPath}" IsReadOnly="True" Margin="0,0,12,0" Height="32"/>
+                                <Button Grid.Column="1" Content="选择导出位置" Command="{Binding SelectExportFolderCommand}"
+                                        Padding="12,6" Height="32"/>
+                            </Grid>
+                            <Button Content="导出归档文件夹 &amp; Excel" Command="{Binding ExportFilesCommand}"
+                                    Margin="30,12,0,0" Padding="12,6" HorizontalAlignment="Left" Height="32"
+                                    Background="#0078D7" Foreground="White" BorderThickness="0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- 右侧日志区 -->
+        <Border Grid.Column="1" CornerRadius="{StaticResource ContainerCornerRadius}" 
+        Background="#F8F9FA" BorderBrush="#E5E5E5" BorderThickness="1"
+        Effect="{StaticResource ContainerShadow}">
+            <Grid Margin="15">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Vertical">
+                    <DockPanel Margin="0,0,0,8" LastChildFill="False">
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                            <mui:SymbolIcon Symbol="List" Margin="0,0,12,0" Foreground="#0078D7" VerticalAlignment="Center"/>
+                            <TextBlock Text="实时日志" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <Button Content="上传日志" Width="100" Margin="0,0,12,0" Padding="10,5"/>
+                            <Button Content="清空" Width="65" Command="{Binding ClearLogCommand}" Padding="10,5"/>
+                        </StackPanel>
+                    </DockPanel>
+                    <Separator Margin="0,0,0,8"/>
+                </StackPanel>
+
+                <ListView Grid.Row="1" ItemsSource="{Binding LogList}" BorderThickness="0" Background="Transparent"
+                  AlternationCount="2" ItemContainerStyle="{StaticResource LogListViewItemStyle}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" ToolTip="{Binding Content}"
+                               FontSize="11">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Error}">
+                                                <Setter Property="Foreground" Value="#D13438"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Warn}">
+                                                <Setter Property="Foreground" Value="#FF8C00"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="{x:Static helpers:LogLevel.Info}">
+                                                <Setter Property="Foreground" Value="#107C10"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+        </Border>
+    </Grid>
+</Page>

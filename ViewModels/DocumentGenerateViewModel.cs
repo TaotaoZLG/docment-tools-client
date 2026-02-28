@@ -24,36 +24,6 @@ namespace docment_tools_client.ViewModels
         /// </summary>
         public string QuotaDisplay => $"剩余额度：{UserInfo.Quota:F2} 元（单价：{UserInfo.UserPrice:F2} 元/条，可处理{(UserInfo.UserPrice > 0 ? (int)(UserInfo.Quota / UserInfo.UserPrice) : 0)}条数据）";
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="currentUser">当前登录用户信息</param>
-        public DocumentGenerateViewModel(UserInfo userInfo)
-        {
-            UserInfo = userInfo ?? throw new ArgumentNullException(nameof(userInfo));
-
-            // 初始化命令
-            SelectTemplateCommand = new RelayCommand(ExecuteSelectTemplate);
-            SelectExcelCommand = new RelayCommand(ExecuteSelectExcel);
-            SelectOutputDirCommand = new RelayCommand(ExecuteSelectOutputDir);
-            PreviewCommand = new RelayCommand(ExecutePreview);
-            StartGenerateCommand = new RelayCommand(ExecuteStartGenerate);
-            ExportTemplateCommand = new RelayCommand(ExecuteExportTemplate);
-            ExportWordTemplateCommand = new RelayCommand(ExecuteExportWordTemplate);
-            QuickSelectCommand = new RelayCommand(ExecuteQuickSelect);
-            ClearLogCommand = new RelayCommand(ExecuteClearLog);
-
-            // 注册日志回调（实时更新UI日志）
-            LogHelper.OnLogReceived += OnLogReceived;
-
-            // 初始化默认模板路径
-            TemplatePath = WordService.GetDefaultTemplatePath();
-            OnPropertyChanged(nameof(TemplatePath));
-
-            // 欢迎日志
-            LogHelper.Info($"进入文书生成页面，当前用户：{UserInfo.UserName}");
-        }
-
         #region 功能区绑定属性
         /// <summary>
         /// 文书类型列表
@@ -218,6 +188,36 @@ namespace docment_tools_client.ViewModels
         /// </summary>
         public ICommand QuickSelectCommand { get; }
         #endregion
+
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="currentUser">当前登录用户信息</param>
+        public DocumentGenerateViewModel(UserInfo userInfo)
+        {
+            UserInfo = userInfo ?? throw new ArgumentNullException(nameof(userInfo));
+
+            // 初始化命令
+            SelectTemplateCommand = new RelayCommand(ExecuteSelectTemplate);
+            SelectExcelCommand = new RelayCommand(ExecuteSelectExcel);
+            SelectOutputDirCommand = new RelayCommand(ExecuteSelectOutputDir);
+            PreviewCommand = new RelayCommand(ExecutePreview);
+            StartGenerateCommand = new RelayCommand(ExecuteStartGenerate);
+            ExportTemplateCommand = new RelayCommand(ExecuteExportTemplate);
+            ExportWordTemplateCommand = new RelayCommand(ExecuteExportWordTemplate);
+            QuickSelectCommand = new RelayCommand(ExecuteQuickSelect);
+            ClearLogCommand = new RelayCommand(ExecuteClearLog);
+
+            // 注册日志回调（实时更新UI日志）
+            LogHelper.OnLogReceived += OnLogReceived;
+
+            // 初始化默认模板路径
+            TemplatePath = WordService.GetDefaultTemplatePath();
+            OnPropertyChanged(nameof(TemplatePath));
+
+            // 欢迎日志
+            LogHelper.Info($"进入文书生成页面，当前用户：{UserInfo.UserName}");
+        }
 
         #region 功能区命令实现
         /// <summary>

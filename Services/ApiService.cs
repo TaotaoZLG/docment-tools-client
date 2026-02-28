@@ -26,7 +26,7 @@ namespace docment_tools_client.Services
         // 登录业务场景：全局请求封装与Token管理（对应第3、4条）
         private static readonly HttpClient _httpClient;
         private static readonly System.Threading.SemaphoreSlim _tokenRefreshLock = new System.Threading.SemaphoreSlim(1, 1);
-        private const string AppHost = "http://localhost:8088";
+        private const string AppHost = "http://192.168.0.124:8088";
         private const string BaseApiUrl = "http://api.cenosoft.top/prod-api"; // 实际地址需配置
 
         static ApiService()

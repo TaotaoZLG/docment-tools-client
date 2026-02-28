@@ -15,49 +15,10 @@ namespace docment_tools_client.ViewModels
     /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        #region 用户区绑定属性
         /// <summary>
         /// 用户信息
         /// </summary>
         public UserInfo UserInfo { get; set; }
-
-        #region 日志区绑定属性
-        /// <summary>
-        /// 日志列表（用于UI展示）
-        /// </summary>
-        public ObservableCollection<UILogItem> LogList { get; set; } = new ObservableCollection<UILogItem>();
-        #endregion
-
-        /// <summary>
-        /// 剩余额度显示（格式化）
-        /// </summary>
-        public string QuotaDisplay => $"剩余额度：{UserInfo.Quota:F2} 元（单价：{UserInfo.UserPrice:F2} 元/条，可处理{(UserInfo.UserPrice > 0 ? (int)(UserInfo.Quota / UserInfo.UserPrice) : 0)}条数据）";
-
-
-        /// <summary>
-        /// 后台消息列表
-        /// </summary>
-        public ObservableCollection<string> MessageList { get; set; } = new ObservableCollection<string>();
-        #endregion
-
-        #region 命令
-        /// <summary>
-        /// 退出登录命令
-        /// </summary>
-        public ICommand LogoutCommand { get; }
-
-        /// <summary>
-        /// 充值命令
-        /// </summary>
-        public ICommand RechargeCommand { get; }
-
-        /// <summary>
-        /// 同步额度命令
-        /// </summary>
-        public ICommand SyncQuotaCommand { get; }
-
-        public ICommand ChangePasswordCommand { get; }
-        #endregion
 
         /// <summary>
         /// 构造函数
@@ -97,6 +58,47 @@ namespace docment_tools_client.ViewModels
                 OnNetworkChanged(true);
             }
         }
+
+        #region 用户区绑定属性
+        #region 日志区绑定属性
+        /// <summary>
+        /// 日志列表（用于UI展示）
+        /// </summary>
+        public ObservableCollection<UILogItem> LogList { get; set; } = new ObservableCollection<UILogItem>();
+        #endregion
+
+        /// <summary>
+        /// 剩余额度显示（格式化）
+        /// </summary>
+        public string QuotaDisplay => $"剩余额度：{UserInfo.Quota:F2} 元（单价：{UserInfo.UserPrice:F2} 元/条，可处理{(UserInfo.UserPrice > 0 ? (int)(UserInfo.Quota / UserInfo.UserPrice) : 0)}条数据）";
+
+        /// <summary>
+        /// 后台消息列表
+        /// </summary>
+        public ObservableCollection<string> MessageList { get; set; } = new ObservableCollection<string>();
+        #endregion
+
+        #region 命令
+        /// <summary>
+        /// 退出登录命令
+        /// </summary>
+        public ICommand LogoutCommand { get; }
+
+        /// <summary>
+        /// 充值命令
+        /// </summary>
+        public ICommand RechargeCommand { get; }
+
+        /// <summary>
+        /// 同步额度命令
+        /// </summary>
+        public ICommand SyncQuotaCommand { get; }
+
+        /// <summary>
+        /// 修改密码命令
+        /// </summary>
+        public ICommand ChangePasswordCommand { get; }
+        #endregion
 
         /// <summary>
         /// 初始化系统公告

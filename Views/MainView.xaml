@@ -43,7 +43,7 @@
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Margin" Value="0,2,0,2"/>
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="15"/>
             <Setter Property="Foreground" Value="#333333"/>
             <!-- 鼠标悬浮样式 -->
             <Style.Triggers>
@@ -54,7 +54,8 @@
                 <!-- 选中样式 -->
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="Background" Value="#0078D7"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Foreground" Value="#0078D7"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -162,29 +163,49 @@
                            Foreground="#0078D7" Margin="15,10,0,0" VerticalAlignment="Top"/>
                 <!-- 菜单列表 -->
                 <ListBox x:Name="MenuListBox" 
-                         SelectionChanged="MenuListBox_SelectionChanged"
-                         ItemContainerStyle="{StaticResource MenuListItemStyle}"
-                         Margin="10,40,10,10" Background="Transparent"
-                         BorderThickness="0">
-                    <!--带图标的菜单项（如果需要，可以取消注释并调整样式）-->
-                    <!--<ListBoxItem Tag="DocumentGeneratePage">
+                 SelectionChanged="MenuListBox_SelectionChanged"
+                 ItemContainerStyle="{StaticResource MenuListItemStyle}"
+                 Margin="10,40,10,10" Background="Transparent"
+                 BorderThickness="0">
+                    <ListBoxItem Tag="HomeView">
                         <StackPanel Orientation="Horizontal">
-                            <mui:SymbolIcon Symbol="Page" Margin="0,0,10,0"/>
-                            <TextBlock Text="文书生成"/>
+                            <mui:SymbolIcon Symbol="Home" Margin="0,0,10,0"/>
+                            <TextBlock Text="首页" Margin="0,2,0,0"/>
                         </StackPanel>
                     </ListBoxItem>
-                    <ListBoxItem Tag="DocumentManagePage">
+                    <ListBoxItem Tag="DocumentFilingView">
                         <StackPanel Orientation="Horizontal">
                             <mui:SymbolIcon Symbol="Folder" Margin="0,0,10,0"/>
-                            <TextBlock Text="文书管理"/>
+                            <TextBlock Text="文件归纳" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="DocumentGenerateView">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="Page" Margin="0,0,10,0"/>
+                            <TextBlock Text="文书生成" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <!-- 文书管理（注释）- 文档列表图标 -->
+                    <!--<ListBoxItem Tag="DocumentManageView">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="DocumentList" Margin="0,0,10,0"/>
+                            <TextBlock Text="文书管理" Margin="0,2,0,0"/>
                         </StackPanel>
                     </ListBoxItem>-->
-                    <ListBoxItem Tag="HomePage" Content="首页"/>
-                    <ListBoxItem Tag="DocumentFilingPage" Content="文件归纳"/>
-                    <ListBoxItem Tag="DocumentGenerateView" Content="文书生成"/>
-                    <!--<ListBoxItem Tag="DocumentManagePage" Content="文书管理"/>-->
-                    <ListBoxItem Tag="TemplateManagePage" Content="模板管理"/>
-                    <ListBoxItem Tag="SystemSettingPage" Content="系统设置"/>
+                    <!-- 模板管理（注释）- 模板图标 -->
+                    <!--<ListBoxItem Tag="TemplateManageView">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="Template" Margin="0,0,10,0"/>
+                            <TextBlock Text="模板管理" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>-->
+                    <!-- 系统设置 -->
+                    <ListBoxItem Tag="SystemSettingView">
+                        <StackPanel Orientation="Horizontal">
+                            <mui:SymbolIcon Symbol="Setting" Margin="0,0,10,0"/>
+                            <TextBlock Text="系统设置" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
             </Grid>
         </Border>
