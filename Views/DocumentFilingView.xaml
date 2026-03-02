@@ -26,6 +26,8 @@
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
+
+        <helpers:InverseBoolConverter x:Key="InverseBoolToVisibilityConverter"/>
     </Page.Resources>
 
     <Grid>
@@ -47,34 +49,37 @@
                         <StackPanel Margin="0,0,0,20">
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <mui:SymbolIcon Symbol="Folder" Margin="0,0,12,0" Foreground="#0078D7"/>
-                                <TextBlock Text="1. 压缩包解压归档" FontSize="14" FontWeight="Bold"/>
+                                <TextBlock Text="1. 源文件处理（压缩包/文件夹）" FontSize="14" FontWeight="Bold"/>
                             </StackPanel>
                             <Separator Margin="0,0,0,8"/>
+                            <!-- 新增：已归档文件夹 CheckBox（核心修改） -->
+                            <CheckBox Content="该文件夹已按规则归档（直接OCR识别，跳过归档步骤）" Margin="30,0,0,4" IsChecked="{Binding IsAlreadyArchived}"/>
                             <Grid Margin="30,0,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox Text="{Binding SourcePath}" IsReadOnly="True" Margin="0,0,12,0" Height="32"/>
-                                <Button Grid.Column="1" Content="选择压缩包/文件夹" Command="{Binding SelectSourcePathCommand}"
-                                        Padding="12,6" Height="32"/>
+                                <Button Grid.Column="1" Content="选择源文件" Command="{Binding SelectSourcePathCommand}" Padding="12,6" Height="32"/>
                             </Grid>
+
                             <!-- 归档规则优先级选择 -->
-                            <StackPanel Margin="30,12,0,0">
-                                <TextBlock Text="归档规则优先级（自动匹配文件名）" Style="{StaticResource FilingTextStyle}" Foreground="Gray"/>
-                                <ListView ItemsSource="{Binding FilingRuleList}" 
-                                          SelectedItem="{Binding SelectedFilingRule}"
-                                          Margin="0,6,0,10" Height="90" SelectionMode="Single">
-                                    <ListView.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding RuleName}" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </ListView.ItemTemplate>
-                                </ListView>
-                                <Button Content="开始处理并归档" Command="{Binding ProcessSourceAndArchiveCommand}"
+                                <StackPanel Margin="30,12,0,0" 
+                                Visibility="{Binding IsAlreadyArchived, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                                    <TextBlock Text="归档规则优先级（自动匹配文件名）" Style="{StaticResource FilingTextStyle}" Foreground="Gray"/>
+                                    <ListView ItemsSource="{Binding FilingRuleList}" 
+                                        SelectedItem="{Binding SelectedFilingRule}"
+                                        Margin="0,6,0,12" Height="90" SelectionMode="Single">
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RuleName}" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                    <Button Content="开始处理并归档" Command="{Binding ProcessSourceAndArchiveCommand}"
                                         Padding="12,6" HorizontalAlignment="Left" Height="32"
                                         Background="#0078D7" Foreground="White" BorderThickness="0"/>
-                            </StackPanel>
+                                </StackPanel>
                         </StackPanel>
 
                         <!-- 2. OCR识别与Excel生成（新增Excel模板上传） -->
@@ -86,7 +91,7 @@
                             <Separator Margin="0,0,0,8"/>
                             <StackPanel Margin="30,0,0,0">
                                 <!-- 新增：Excel模板上传 -->
-                                <TextBlock Text="Excel模板（可选）" Style="{StaticResource FilingTextStyle}" Foreground="Gray" Margin="0,0,0,4"/>
+                                <TextBlock Text="Excel模板（可选）" Style="{StaticResource FilingTextStyle}" Foreground="Gray" Margin="0,4,0,4"/>
                                 <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -98,12 +103,11 @@
                                 </Grid>
                                 <!-- OCR语言选择 -->
                                 <ComboBox ItemsSource="{Binding OcrLanguageList}" 
-                                          SelectedItem="{Binding SelectedOcrLanguage}"
-                                          Margin="0,0,0,8" Width="150" Height="28"/>
+                                          SelectedItem="{Binding SelectedOcrLanguage}" Width="150" Height="28"/>
                                 <!-- 识别生成按钮 -->
                                 <Button Content="识别图片并生成Excel" Command="{Binding OcrAndGenerateExcelCommand}"
                                         Padding="12,6" HorizontalAlignment="Left" Height="32"
-                                        Background="#0078D7" Foreground="White" BorderThickness="0"/>
+                                        Background="#0078D7" Foreground="White" BorderThickness="0" Margin="0,12,0,0"/>
                             </StackPanel>
                         </StackPanel>
 
@@ -114,7 +118,7 @@
                                 <TextBlock Text="3. 归档文件导出" FontSize="14" FontWeight="Bold"/>
                             </StackPanel>
                             <Separator Margin="0,0,0,8"/>
-                            <Grid Margin="30,0,0,0">
+                            <Grid Margin="30,4,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>

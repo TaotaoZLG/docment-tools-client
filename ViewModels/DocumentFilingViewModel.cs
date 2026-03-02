@@ -25,7 +25,6 @@ namespace docment_tools_client.ViewModels
     public class DocumentFilingViewModel : ViewModelBase, IDisposable
     {
         #region 绑定属性
-        // ========== 核心修改：重命名压缩包路径为源路径（支持文件/文件夹） ==========
         private string _sourcePath;
         public string SourcePath
         {
@@ -82,6 +81,13 @@ namespace docment_tools_client.ViewModels
             set { _logList = value; OnPropertyChanged(); }
         }
 
+        private bool _isAlreadyArchived;
+        public bool IsAlreadyArchived
+        {
+            get => _isAlreadyArchived;
+            set { _isAlreadyArchived = value; OnPropertyChanged(); }
+        }
+
         // 临时归档目录（避免磁盘残留）
         private readonly string _tempArchiveDir;
         // 生成的Excel路径
@@ -91,13 +97,13 @@ namespace docment_tools_client.ViewModels
         #endregion
 
         #region 命令定义
-        // ========== 核心修改：重命名选择压缩包命令为选择源路径命令 ==========
         public ICommand SelectSourcePathCommand { get; }
-        public ICommand ProcessSourceAndArchiveCommand { get; } // 原UnzipAndArchiveCommand
+        public ICommand ProcessSourceAndArchiveCommand { get; }
         public ICommand OcrAndGenerateExcelCommand { get; }
         public ICommand SelectExportFolderCommand { get; }
         public ICommand ExportFilesCommand { get; }
         public ICommand SelectExcelTemplateCommand { get; }
+        public ICommand ClearLogCommand { get; }
         #endregion
 
         public DocumentFilingViewModel()
@@ -107,14 +113,18 @@ namespace docment_tools_client.ViewModels
             // 初始化临时目录（带GUID避免冲突）
             _tempArchiveDir = Path.Combine(Path.GetTempPath(), $"DocArchive_{Guid.NewGuid():N}");
             Directory.CreateDirectory(_tempArchiveDir);
+            // 默认导出路径为桌面
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            ExportFolderPath = desktopPath;
 
             // 初始化命令
-            SelectSourcePathCommand = new RelayCommand(SelectSourcePath); // 替换原SelectCompressFileCommand
-            ProcessSourceAndArchiveCommand = new RelayCommand(ProcessSourceAndArchive); // 替换原UnzipAndArchiveCommand
+            SelectSourcePathCommand = new RelayCommand(SelectSourcePath);
+            ProcessSourceAndArchiveCommand = new RelayCommand(ProcessSourceAndArchive);
             OcrAndGenerateExcelCommand = new RelayCommand(OcrAndGenerateExcel);
             SelectExportFolderCommand = new RelayCommand(SelectExportFolder);
             ExportFilesCommand = new RelayCommand(ExportFiles);
             SelectExcelTemplateCommand = new RelayCommand(SelectExcelTemplate);
+            ClearLogCommand = new RelayCommand(ExecuteClearLog);
 
             // 初始化归档规则（优先级从高到低）
             InitFilingRules();
@@ -126,30 +136,44 @@ namespace docment_tools_client.ViewModels
 
         #region 初始化方法
         /// <summary>
-        /// 初始化归档规则（优先级：身份证号 > 唯一字符串 > 文件名）
+        /// 初始化归档规则（优先级：下划线首段 > 姓名+身份证号 > 唯一字符串 > 文件名兜底）
         /// </summary>
         private void InitFilingRules()
         {
             FilingRuleList = new ObservableCollection<FilingRule>
             {
-                // 规则1（最高优先级）：匹配姓名+18位身份证号
+                // 规则0（最高优先级）：下划线分隔取首段（适配示例文件名：20200915235025178252491031_xxx）
                 new FilingRule
                 {
-                    RuleName = "1. 姓名+18位身份证号（优先）",
+                    RuleName = "0. 下划线分隔首段（最高优先）",
                     GetArchiveKey = fileName =>
                     {
-                        // 优化身份证正则：严格匹配18位（最后一位支持X/x）
-                        var idCardRegex = new Regex(@"[1-9]\d{5}(19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[\dXx]");
-                        var idCardMatch = idCardRegex.Match(fileName);
-                        if (idCardMatch.Success)
+                        // 先剥离扩展名，避免扩展名干扰
+                        string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                        if (string.IsNullOrWhiteSpace(nameWithoutExt))
+                            return GetUniqueStringKey(fileName); // 降级到下一级规则
+
+                        // 按下划线拆分，取第一个非空分段
+                        if (nameWithoutExt.Contains("_"))
                         {
-                            // 提取身份证号前的姓名（仅中文，最多提取4个汉字）
-                            var nameSegment = fileName.Substring(0, idCardMatch.Index);
-                            var nameMatch = Regex.Match(nameSegment, @"[\u4e00-\u9fa5]{1,4}");
-                            var name = nameMatch.Success ? nameMatch.Value.Trim() : string.Empty;
-                            return string.IsNullOrEmpty(name) ? idCardMatch.Value : $"{name}_{idCardMatch.Value}";
+                            string core = nameWithoutExt.Split('_')[0].Trim();
+                            if (!string.IsNullOrWhiteSpace(core))
+                                return core;
                         }
-                        // 匹配不到则降级到规则2
+                        // 匹配不到则降级到身份证规则
+                        return GetIdCardKey(fileName);
+                    }
+                },
+                // 规则1：匹配姓名+18位身份证号
+                new FilingRule
+                {
+                    RuleName = "1. 姓名+18位身份证号",
+                    GetArchiveKey = fileName =>
+                    {
+                        string idCardKey = GetIdCardKey(fileName);
+                        if (!string.IsNullOrWhiteSpace(idCardKey) && idCardKey != GetUniqueStringKey(fileName))
+                            return idCardKey;
+                        // 降级到唯一字符串规则
                         return GetUniqueStringKey(fileName);
                     }
                 },
@@ -171,13 +195,64 @@ namespace docment_tools_client.ViewModels
         }
 
         /// <summary>
-        /// 提取唯一字符串（字母/数字/下划线，长度≥6）
+        /// 提取身份证号Key
+        /// </summary>
+        private string GetIdCardKey(string fileName)
+        {
+            string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+            if (string.IsNullOrWhiteSpace(nameWithoutExt))
+                return string.Empty;
+
+            // 严格匹配18位身份证号（最后一位支持X/x）
+            var idCardRegex = new Regex(@"[1-9]\d{5}(19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[\dXx]", RegexOptions.Compiled);
+            var idCardMatch = idCardRegex.Match(nameWithoutExt);
+            if (idCardMatch.Success)
+            {
+                // 提取身份证号前的姓名（仅中文，最多4个汉字）
+                var nameSegment = nameWithoutExt.Substring(0, idCardMatch.Index);
+                var nameMatch = Regex.Match(nameSegment, @"[\u4e00-\u9fa5]{1,4}");
+                var name = nameMatch.Success ? nameMatch.Value.Trim() : string.Empty;
+                return string.IsNullOrEmpty(name) ? idCardMatch.Value : $"{name}_{idCardMatch.Value}";
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// 提取唯一字符串Key（支持多分隔符）
         /// </summary>
         private string GetUniqueStringKey(string fileName)
         {
-            // 优化正则：匹配连续的字母/数字/下划线（长度≥6）
-            var uniqueStrMatch = Regex.Match(fileName, @"(?<=[^a-zA-Z0-9_])[a-zA-Z0-9_]{6,}(?=[^a-zA-Z0-9_])");
-            return uniqueStrMatch.Success ? uniqueStrMatch.Value : Path.GetFileNameWithoutExtension(fileName);
+            string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+            if (string.IsNullOrWhiteSpace(nameWithoutExt))
+                return Path.GetFileName(fileName) ?? string.Empty;
+
+            // 先处理下划线（兜底）
+            if (nameWithoutExt.Contains("_"))
+            {
+                string core = nameWithoutExt.Split('_')[0].Trim();
+                if (!string.IsNullOrWhiteSpace(core))
+                    return core;
+            }
+
+            // 匹配连续的字母/数字/下划线（长度≥6）
+            var uniqueStrMatch = Regex.Match(nameWithoutExt, @"(?<=[^a-zA-Z0-9_])[a-zA-Z0-9_]{6,}(?=[^a-zA-Z0-9_])");
+            if (uniqueStrMatch.Success)
+                return uniqueStrMatch.Value;
+
+            // 补充：按常见分隔符（-、空格、#）拆分取首段
+            char[] separators = new[] { '-', ' ', '#' };
+            foreach (char sep in separators)
+            {
+                if (nameWithoutExt.Contains(sep))
+                {
+                    string core = nameWithoutExt.Split(sep)[0].Trim();
+                    if (!string.IsNullOrWhiteSpace(core))
+                        return core;
+                }
+            }
+
+            // 最终兜底：返回文件名主体
+            return nameWithoutExt;
         }
 
         /// <summary>
@@ -192,11 +267,28 @@ namespace docment_tools_client.ViewModels
 
         #region 核心业务逻辑
         /// <summary>
-        /// 选择源路径（支持压缩包文件/文件夹）
+        /// 选择源路径（勾选已归档时仅允许选文件夹）
         /// </summary>
         private void SelectSourcePath()
         {
-            // 弹出选择类型对话框，让用户选择是选文件还是文件夹
+            // 勾选已归档模式时，强制只能选文件夹
+            if (IsAlreadyArchived)
+            {
+                var folderDialog = new OpenFolderDialog
+                {
+                    Title = "选择已归档的文件夹",
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                };
+
+                if (folderDialog.ShowDialog() == true)
+                {
+                    SourcePath = folderDialog.FolderName;
+                    AddLog($"已选择已归档文件夹：{SourcePath}");
+                }
+                return;
+            }
+
+            // 未勾选时，保留原逻辑（选压缩包/文件夹）
             var result = MessageBox.Show("请选择要处理的类型：\n【是】- 压缩包文件（zip/rar/7z）\n【否】- 文件夹", "选择处理类型",
                 MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
@@ -205,7 +297,7 @@ namespace docment_tools_client.ViewModels
 
             if (result == MessageBoxResult.Yes)
             {
-                // 选择压缩包文件
+                // 选择压缩包文件逻辑
                 var openFileDialog = new OpenFileDialog
                 {
                     Title = "选择压缩包文件",
@@ -215,7 +307,6 @@ namespace docment_tools_client.ViewModels
 
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    // 校验文件格式是否支持
                     var ext = Path.GetExtension(openFileDialog.FileName).ToLower();
                     if (!new[] { ".zip", ".rar", ".7z" }.Contains(ext))
                     {
@@ -229,7 +320,7 @@ namespace docment_tools_client.ViewModels
             }
             else
             {
-                // 选择文件夹
+                // 选择文件夹逻辑
                 var folderDialog = new OpenFolderDialog
                 {
                     Title = "选择要归档的文件夹",
@@ -270,6 +361,20 @@ namespace docment_tools_client.ViewModels
         {
             try
             {
+                // 勾选已归档时跳过归档
+                if (IsAlreadyArchived)
+                {
+                    // 校验源路径是否为文件夹
+                    if (!Directory.Exists(SourcePath))
+                    {
+                        MessageBox.Show("已归档模式下，源路径必须是文件夹！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    AddLog("已勾选「已归档文件夹」，跳过归档步骤，可直接执行OCR识别");
+                    MessageBox.Show("已归档模式：跳过归档步骤，请直接点击「OCR识别并生成Excel」按钮", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
                 if (string.IsNullOrEmpty(SourcePath) || (!File.Exists(SourcePath) && !Directory.Exists(SourcePath)))
                 {
                     MessageBox.Show("请先选择有效的压缩包文件或文件夹！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -283,16 +388,26 @@ namespace docment_tools_client.ViewModels
 
                 var fileCount = 0;
 
-                // ========== 核心逻辑：区分源路径类型（文件/文件夹） ==========
+                // 区分源路径类型（文件/文件夹）
                 if (File.Exists(SourcePath))
                 {
                     // 源路径是压缩包文件 → 解压并归档
                     fileCount = ProcessCompressFile(SourcePath);
+                    if (fileCount == 0)
+                    {
+                        AddLog("压缩包处理过程中检测到错误，已终止！", LogLevel.Error);
+                        return;
+                    }
                 }
                 else if (Directory.Exists(SourcePath))
                 {
                     // 源路径是文件夹 → 直接遍历并归档
                     fileCount = ProcessFolder(SourcePath);
+                    if (fileCount == 0)
+                    {
+                        AddLog("文件夹处理过程中检测到错误，已终止！", LogLevel.Error);
+                        return;
+                    }
                 }
 
                 // 清理空文件夹
@@ -308,48 +423,70 @@ namespace docment_tools_client.ViewModels
         }
 
         /// <summary>
-        /// 处理压缩包文件（解压并归档）
+        /// 处理压缩包文件（解压并归档，触发错误立即终止）
         /// </summary>
         private int ProcessCompressFile(string compressFilePath)
         {
             int fileCount = 0;
-            // 适配 SharpCompress 0.46.3：使用 ArchiveFactory.Open()
+
             using (var archive = ArchiveFactory.Open(compressFilePath))
             {
                 foreach (var entry in archive.Entries)
                 {
-                    // 跳过目录和空文件
-                    if (entry.IsDirectory || entry.Size == 0)
-                        continue;
+                    if (entry.IsDirectory || entry.Size == 0) continue;
 
                     try
                     {
-                        // 按选中规则生成归档Key
-                        var archiveKey = SelectedFilingRule.GetArchiveKey(entry.Key);
+                        string fileName = Path.GetFileName(entry.Key);
+                        string archiveKey;
+
+                        if (IsAlreadyArchived)
+                        {
+                            archiveKey = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
+                            AddLog($"已归档模式：文件「{fileName}」直接使用文件名作为Key → {archiveKey}");
+                        }
+                        else
+                        {
+                            archiveKey = SelectedFilingRule.GetArchiveKey(fileName);
+                            // 空Key校验：触发错误则弹窗并终止方法
+                            if (string.IsNullOrWhiteSpace(archiveKey))
+                            {
+                                string errorMsg = $"文件无法通过当前规则「{SelectedFilingRule.RuleName}」提取归档Key，请更换规则！";
+                                AddLog(errorMsg, LogLevel.Error);
+
+                                // 弹窗后直接return，终止所有后续处理
+                                Application.Current.Dispatcher.Invoke(() =>
+                                    MessageBox.Show(errorMsg, "提示", MessageBoxButton.OK, MessageBoxImage.Warning));
+                                return fileCount;
+                            }
+                        }
+
                         var archiveFolder = Path.Combine(_tempArchiveDir, archiveKey);
-                        // 创建归档文件夹
                         if (!Directory.Exists(archiveFolder))
                         {
                             Directory.CreateDirectory(archiveFolder);
                             AddLog($"创建归档文件夹：{archiveKey}");
                         }
 
-                        // 适配 SharpCompress 0.46.3：解压文件到归档文件夹
-                        var destFilePath = Path.Combine(archiveFolder, Path.GetFileName(entry.Key));
-                        // 使用 entry.WriteToFile() 配合 ExtractionOptions
+                        var destFilePath = GetUniqueDestFilePath(archiveFolder, fileName);
                         entry.WriteToFile(destFilePath, new ExtractionOptions
                         {
-                            ExtractFullPath = false, // 关键：忽略压缩包内的目录层级
+                            ExtractFullPath = false,
                             Overwrite = true
                         });
 
                         fileCount++;
-                        AddLog($"解压文件：{Path.GetFileName(entry.Key)} → {archiveKey}");
+                        AddLog($"解压文件：{fileName} → {archiveKey}");
                     }
                     catch (Exception ex)
                     {
-                        AddLog($"解压文件 {Path.GetFileName(entry.Key)} 失败：{ex.Message}", LogLevel.Error);
-                        continue; // 单个文件失败不中断整体解压
+                        string errorMsg = $"解压文件 {Path.GetFileName(entry.Key)} 失败：{ex.Message}";
+                        AddLog(errorMsg, LogLevel.Error);
+
+                        // 异常时弹窗并终止
+                        Application.Current.Dispatcher.Invoke(() =>
+                            MessageBox.Show(errorMsg, "解压失败", MessageBoxButton.OK, MessageBoxImage.Error));
+                        return 0;
                     }
                 }
             }
@@ -357,59 +494,98 @@ namespace docment_tools_client.ViewModels
         }
 
         /// <summary>
-        /// 处理文件夹（直接遍历文件并归档）
+        /// 处理文件夹（直接遍历文件并归档，触发错误立即终止）
         /// </summary>
         private int ProcessFolder(string folderPath)
         {
             int fileCount = 0;
-            // 递归遍历文件夹下的所有文件（含子目录）
-            var allFiles = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories);
 
-            foreach (var file in allFiles)
+            foreach (var file in files)
             {
+                if (new FileInfo(file).Length == 0) continue;
+
+                string fileName = Path.GetFileName(file);
+                string archiveKey;
+
                 try
                 {
-                    // 跳过空文件
-                    if (new FileInfo(file).Length == 0)
-                        continue;
+                    if (IsAlreadyArchived)
+                    {
+                        archiveKey = Path.GetFileNameWithoutExtension(fileName) ?? string.Empty;
+                        AddLog($"已归档模式：文件「{fileName}」直接使用文件名作为Key → {archiveKey}");
+                    }
+                    else
+                    {
+                        archiveKey = SelectedFilingRule.GetArchiveKey(fileName);
+                        if (string.IsNullOrWhiteSpace(archiveKey))
+                        {
+                            string errorMsg = $"文件无法通过当前规则「{SelectedFilingRule.RuleName}」提取归档Key，请更换规则！";
+                            AddLog(errorMsg, LogLevel.Error);
 
-                    // 按选中规则生成归档Key（使用文件完整路径/文件名）
-                    var archiveKey = SelectedFilingRule.GetArchiveKey(file);
+                            Application.Current.Dispatcher.Invoke(() =>
+                                MessageBox.Show(errorMsg, "提示", MessageBoxButton.OK, MessageBoxImage.Warning));
+                            return fileCount;
+                        }
+                    }
+
                     var archiveFolder = Path.Combine(_tempArchiveDir, archiveKey);
-                    // 创建归档文件夹
                     if (!Directory.Exists(archiveFolder))
                     {
                         Directory.CreateDirectory(archiveFolder);
                         AddLog($"创建归档文件夹：{archiveKey}");
                     }
 
-                    // 复制文件到归档文件夹
-                    var destFilePath = Path.Combine(archiveFolder, Path.GetFileName(file));
+                    var destFilePath = GetUniqueDestFilePath(archiveFolder, fileName);
                     File.Copy(file, destFilePath, true);
 
                     fileCount++;
-                    AddLog($"复制文件：{Path.GetFileName(file)} → {archiveKey}");
+                    AddLog($"复制文件：{fileName} → {archiveKey}");
                 }
                 catch (Exception ex)
                 {
-                    AddLog($"复制文件 {Path.GetFileName(file)} 失败：{ex.Message}", LogLevel.Error);
-                    continue; // 单个文件失败不中断整体处理
+                    string errorMsg = $"复制文件 {fileName} 失败：{ex.Message}";
+                    AddLog(errorMsg, LogLevel.Error);
+
+                    // 异常时弹窗并终止
+                    Application.Current.Dispatcher.Invoke(() =>
+                        MessageBox.Show(errorMsg, "复制失败", MessageBoxButton.OK, MessageBoxImage.Error));
+                    return 0;
                 }
             }
             return fileCount;
         }
 
         /// <summary>
-        /// Tesseract OCR识别图片并生成Excel（支持模板/动态生成）
+        /// Tesseract OCR识别图片并生成Excel（支持模板/动态生成 + 兼容已归档文件夹）
         /// </summary>
         private void OcrAndGenerateExcel()
         {
             try
             {
-                if (!Directory.Exists(_tempArchiveDir) || Directory.GetDirectories(_tempArchiveDir).Length == 0)
+                // ========== 核心修改：动态切换OCR读取目录 ==========
+                string ocrRootDir = string.Empty;
+                if (IsAlreadyArchived)
                 {
-                    MessageBox.Show("请先完成源路径处理归档！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    // 已归档模式：读取SourcePath（必须是文件夹）
+                    if (string.IsNullOrEmpty(SourcePath) || !Directory.Exists(SourcePath))
+                    {
+                        MessageBox.Show("已归档模式下，请先选择有效的文件夹！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    ocrRootDir = SourcePath;
+                    AddLog($"已归档模式：直接读取文件夹 {ocrRootDir} 进行OCR识别");
+                }
+                else
+                {
+                    // 未归档模式：读取临时目录（需先执行归档）
+                    if (!Directory.Exists(_tempArchiveDir) || Directory.GetDirectories(_tempArchiveDir).Length == 0)
+                    {
+                        MessageBox.Show("未归档模式下，请先点击「开始处理并归档」按钮完成归档！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+                    ocrRootDir = _tempArchiveDir;
+                    AddLog($"未归档模式：读取临时归档目录 {ocrRootDir} 进行OCR识别");
                 }
 
                 AddLog("开始OCR识别图片并生成Excel...");
@@ -457,13 +633,17 @@ namespace docment_tools_client.ViewModels
                     sheet = workbook.CreateSheet("OCR识别结果");
                 }
 
-                // 遍历所有归档文件夹
-                foreach (var archiveFolder in Directory.GetDirectories(_tempArchiveDir))
+                // ========== 修改：遍历动态切换的根目录 ==========
+                foreach (var archiveFolder in Directory.GetDirectories(ocrRootDir))
                 {
                     var folderName = Path.GetFileName(archiveFolder);
-                    // 遍历图片文件（仅处理常见图片格式）
-                    var imageFiles = Directory.GetFiles(archiveFolder)
-                        .Where(f => new[] { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif" }.Contains(Path.GetExtension(f).ToLower()));
+                    // 定义需要遍历的图片扩展名（可按需扩展）
+                    var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".bmp", ".tiff", ".gif", ".webp" };
+                    // 调用通用递归方法，获取所有嵌套层级的图片文件
+                    var imageFiles = GetAllFilesRecursively(archiveFolder, imageExtensions);
+
+                    // 日志打印：当前归档文件夹下找到的图片总数（含嵌套）
+                    AddLog($"归档文件夹 {folderName} 下共找到 {imageFiles.Count} 张图片（含多层嵌套子文件夹）");
 
                     foreach (var imageFile in imageFiles)
                     {
@@ -520,7 +700,6 @@ namespace docment_tools_client.ViewModels
                 }
 
                 // 自动调整列宽
-                // 根据首行（表头）获取列数
                 IRow headerRow = sheet.GetRow(0);
                 if (headerRow != null)
                 {
@@ -528,20 +707,21 @@ namespace docment_tools_client.ViewModels
                     for (int i = 0; i < lastCellNum; i++)
                     {
                         sheet.AutoSizeColumn(i);
-                        // 限制最大列宽，避免过宽
                         var currentWidth = sheet.GetColumnWidth(i);
                         sheet.SetColumnWidth(i, currentWidth > 6000 ? 6000 : currentWidth);
                     }
                 }
 
-                // 保存Excel到临时目录
-                _excelFilePath = Path.Combine(_tempArchiveDir, $"OCR识别结果_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
+                // Excel保存路径（兼容已归档模式）
+                string excelSaveDir = string.IsNullOrEmpty(ExportFolderPath) ? _tempArchiveDir : ExportFolderPath;
+                _excelFilePath = Path.Combine(excelSaveDir, $"OCR识别结果_{DateTime.Now:yyyyMMddHHmmss}.xlsx");
                 using (var fs = new FileStream(_excelFilePath, FileMode.Create, FileAccess.Write))
                 {
                     workbook.Write(fs);
                 }
 
                 AddLog($"Excel生成完成：{Path.GetFileName(_excelFilePath)}");
+                MessageBox.Show($"Excel生成成功！\n路径：{_excelFilePath}", "成功", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -555,7 +735,6 @@ namespace docment_tools_client.ViewModels
         /// </summary>
         private void SelectExportFolder()
         {
-            // 兼容WPF的文件夹选择对话框
             var folderDialog = new OpenFolderDialog
             {
                 Title = "选择归档文件导出位置",
@@ -571,7 +750,7 @@ namespace docment_tools_client.ViewModels
         }
 
         /// <summary>
-        /// 导出归档文件夹和Excel文件
+        /// 导出归档文件夹和Excel文件（兼容已归档模式：仅导出Excel）
         /// </summary>
         private void ExportFiles()
         {
@@ -583,22 +762,38 @@ namespace docment_tools_client.ViewModels
                     return;
                 }
 
+                // 校验Excel是否生成
+                if (string.IsNullOrEmpty(_excelFilePath) || !File.Exists(_excelFilePath))
+                {
+                    MessageBox.Show("未检测到生成的Excel文件，请先执行OCR识别！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 AddLog("开始导出文件...");
                 // 生成最终导出文件夹（带时间戳避免覆盖）
                 var exportDir = Path.Combine(ExportFolderPath, $"文档归档结果_{DateTime.Now:yyyyMMddHHmmss}");
                 Directory.CreateDirectory(exportDir);
 
-                // 复制归档文件夹
-                foreach (var folder in Directory.GetDirectories(_tempArchiveDir))
+                // IsAlreadyArchived切换导出逻辑 
+                if (IsAlreadyArchived)
                 {
-                    var destFolder = Path.Combine(exportDir, Path.GetFileName(folder));
-                    CopyDirectory(folder, destFolder);
-                    AddLog($"复制归档文件夹：{Path.GetFileName(folder)} → {exportDir}");
+                    // 已归档模式：仅复制Excel文件
+                    var excelDestPath = Path.Combine(exportDir, Path.GetFileName(_excelFilePath));
+                    File.Copy(_excelFilePath, excelDestPath, true);
+                    AddLog($"仅导出Excel文件：{Path.GetFileName(_excelFilePath)} → {exportDir}");
                 }
-
-                // 复制Excel文件（如果存在）
-                if (!string.IsNullOrEmpty(_excelFilePath) && File.Exists(_excelFilePath))
+                else
                 {
+                    // 未归档模式：复制归档文件夹 + Excel（原有逻辑）
+                    // 复制归档文件夹
+                    foreach (var folder in Directory.GetDirectories(_tempArchiveDir))
+                    {
+                        var destFolder = Path.Combine(exportDir, Path.GetFileName(folder));
+                        CopyDirectory(folder, destFolder);
+                        AddLog($"复制归档文件夹：{Path.GetFileName(folder)} → {exportDir}");
+                    }
+
+                    // 复制Excel文件
                     var excelDestPath = Path.Combine(exportDir, Path.GetFileName(_excelFilePath));
                     File.Copy(_excelFilePath, excelDestPath, true);
                     AddLog($"复制Excel文件：{Path.GetFileName(_excelFilePath)}");
@@ -621,7 +816,110 @@ namespace docment_tools_client.ViewModels
         }
         #endregion
 
-        #region 辅助方法（Excel模板/动态生成核心逻辑）
+        #region 辅助方法           
+        /// <summary>
+        /// 获取唯一的目标文件路径（处理重名，自动加数字后缀）
+        /// </summary>
+        private string GetUniqueDestFilePath(string targetFolder, string fileName)
+        {
+            string destFilePath = Path.Combine(targetFolder, fileName);
+            if (!File.Exists(destFilePath))
+                return destFilePath;
+
+            // 重名则添加数字后缀（如：文件名_1.jpg）
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+            string ext = Path.GetExtension(fileName);
+            int suffix = 1;
+            while (File.Exists(destFilePath))
+            {
+                destFilePath = Path.Combine(targetFolder, $"{fileNameWithoutExt}_{suffix}{ext}");
+                suffix++;
+            }
+            return destFilePath;
+        }
+
+        /// <summary>
+        /// 递归复制文件夹（含子目录）
+        /// </summary>
+        private void CopyDirectory(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+            // 复制文件
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                try
+                {
+                    File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), true);
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"复制文件 {Path.GetFileName(file)} 失败：{ex.Message}", LogLevel.Error);
+                }
+            }
+            // 递归复制子目录
+            foreach (var subDir in Directory.GetDirectories(sourceDir))
+            {
+                CopyDirectory(subDir, Path.Combine(destDir, Path.GetFileName(subDir)));
+            }
+        }
+
+        /// <summary>
+        /// 通用型递归文件获取方法（支持多层嵌套子文件夹，适配任意文件类型）
+        /// </summary>
+        /// <param name="rootDir">根目录</param>
+        /// <param name="fileExtensions">需要匹配的文件扩展名列表（如：new[] { ".jpg", ".pdf" }）</param>
+        /// <param name="ignoreCase">是否忽略扩展名大小写（默认true）</param>
+        /// <returns>所有匹配文件的完整路径列表</returns>
+        private List<string> GetAllFilesRecursively(string rootDir, string[] fileExtensions, bool ignoreCase = true)
+        {
+            var matchedFiles = new List<string>();
+            // 校验根目录有效性
+            if (!Directory.Exists(rootDir))
+            {
+                AddLog($"根目录不存在：{rootDir}", LogLevel.Warn);
+                return matchedFiles;
+            }
+
+            try
+            {
+                // 1. 获取当前目录下匹配的文件（兼容大小写）
+                var currentFiles = Directory.GetFiles(rootDir)
+                    .Where(file =>
+                    {
+                        string fileExt = Path.GetExtension(file);
+                        // 空扩展名（如无后缀文件）直接过滤
+                        if (string.IsNullOrEmpty(fileExt)) return false;
+                        // 按配置决定是否忽略大小写
+                        return ignoreCase
+                            ? fileExtensions.Contains(fileExt.ToLower())
+                            : fileExtensions.Contains(fileExt);
+                    })
+                    .ToList();
+                matchedFiles.AddRange(currentFiles);
+
+                // 2. 递归遍历所有子目录（无论嵌套多少层）
+                foreach (var subDir in Directory.GetDirectories(rootDir))
+                {
+                    var subDirFiles = GetAllFilesRecursively(subDir, fileExtensions, ignoreCase);
+                    matchedFiles.AddRange(subDirFiles);
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                AddLog($"无权限访问目录 {rootDir}：{ex.Message}", LogLevel.Warn);
+            }
+            catch (PathTooLongException ex)
+            {
+                AddLog($"目录路径过长无法访问 {rootDir}：{ex.Message}", LogLevel.Warn);
+            }
+            catch (Exception ex)
+            {
+                AddLog($"遍历目录 {rootDir} 失败：{ex.Message}", LogLevel.Warn);
+            }
+
+            return matchedFiles;
+        }
+
         /// <summary>
         /// 解析OCR文本为键值对（支持"键：值""键=值""键-值"等格式）
         /// </summary>
@@ -734,36 +1032,9 @@ namespace docment_tools_client.ViewModels
                 row.CreateCell(dataColIndex++).SetCellValue(value);
             }
         }
-        #endregion
-
-        #region 原有辅助方法
-        /// <summary>
-        /// 递归复制文件夹（含子目录）
-        /// </summary>
-        private void CopyDirectory(string sourceDir, string destDir)
-        {
-            Directory.CreateDirectory(destDir);
-            // 复制文件
-            foreach (var file in Directory.GetFiles(sourceDir))
-            {
-                try
-                {
-                    File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), true);
-                }
-                catch (Exception ex)
-                {
-                    AddLog($"复制文件 {Path.GetFileName(file)} 失败：{ex.Message}", LogLevel.Error);
-                }
-            }
-            // 递归复制子目录
-            foreach (var subDir in Directory.GetDirectories(sourceDir))
-            {
-                CopyDirectory(subDir, Path.Combine(destDir, Path.GetFileName(subDir)));
-            }
-        }
 
         /// <summary>
-        /// 添加日志（适配项目现有LogHelper）
+        /// 添加日志
         /// </summary>
         public void AddLog(string content, LogLevel level = LogLevel.Info)
         {
@@ -809,6 +1080,17 @@ namespace docment_tools_client.ViewModels
                     AddLog($"清理空文件夹：{subDir}");
                 }
             }
+        }
+
+        /// <summary>
+        /// 清空日志
+        /// </summary>
+        private void ExecuteClearLog()
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                LogList.Clear();
+            });
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
 
@@ -18,16 +19,16 @@ namespace docment_tools_client.Helpers
         {
             if (value is bool boolValue)
             {
-                return !boolValue;
+                return boolValue ? Visibility.Collapsed : Visibility.Visible;
             }
-            return false;
+            return Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-             if (value is bool boolValue)
+            if (value is Visibility visibility)
             {
-                return !boolValue;
+                return visibility != Visibility.Visible;
             }
             return false;
         }

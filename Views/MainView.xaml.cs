@@ -82,21 +82,6 @@ namespace docment_tools_client.Views
                 }
                 UserInfo userInfo = mainViewModel.UserInfo;
 
-                // 伪造测试用户信息
-                //UserInfo userInfo = new UserInfo
-                //{
-                //    UserId = 1001,
-                //    UserName = "测试管理员",
-                //    Account = "test_admin",
-                //    Token = "TEST_TOKEN_20240520",
-                //    Quota = 99999.99m,
-                //    UserPrice = 0.001m,
-                //    LoginRecordId = 9999,
-                //    Status = UserStatus.ONLINE,
-                //    EncryptedQuota = "fake_encrypt_quota_test",
-                //    EncryptedUserPrice = "fake_encrypt_price_test"
-                //};
-
                 // ===== 核心修复：兼容无参/有参构造创建页面 =====
                 Page targetPage = null;
                 try

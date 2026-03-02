@@ -138,19 +138,39 @@ namespace docment_tools_client.ViewModels
                 // 这里我们假设 DeviceHelper 内部处理或 LocalStorageHelper 处理。
                 // 简化：直接传输 DeviceId (Hash值) 给后端。
 
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    var mainView = new Views.MainView();
-                    var loginWin = Application.Current.MainWindow;
-                    Application.Current.MainWindow = mainView;
-                    mainView.Show();
-                    loginWin?.Close();
-                });
-                return;
+                //Application.Current.Dispatcher.Invoke(() =>
+                //{
+                //    var mainView = new Views.MainView();
+                //    var loginWin = Application.Current.MainWindow;
+                //    Application.Current.MainWindow = mainView;
+                //    mainView.Show();
+                //    loginWin?.Close();
+                //});
+                //return;
 
                 // 3. 发起请求
                 LoadingTip = "正在验证身份...";
-                var result = await ApiService.LoginAsync(Account, encryptedPwd, deviceId);
+                //var result = await ApiService.LoginAsync(Account, encryptedPwd, deviceId);
+
+                // 伪造测试用户信息
+                AjaxResult result = new AjaxResult
+                {
+                    Code = 200,
+                    Msg = "登录成功",
+                    Data = new UserInfo
+                    {
+                        UserId = 1001,
+                        UserName = "测试管理员",
+                        Account = "test_admin",
+                        Token = "TEST_TOKEN_20240520",
+                        Quota = 99999.99m,
+                        UserPrice = 0.001m,
+                        LoginRecordId = 9999,
+                        Status = UserStatus.ONLINE,
+                        EncryptedQuota = "fake_encrypt_quota_test",
+                        EncryptedUserPrice = "fake_encrypt_price_test"
+                    }
+                };
 
                 if (result.IsSuccess && result.Data is UserInfo userInfo)
                 {

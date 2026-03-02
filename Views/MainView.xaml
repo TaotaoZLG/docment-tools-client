@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:docment_tools_client.Views"
         xmlns:vm="clr-namespace:docment_tools_client.ViewModels"
         mc:Ignorable="d"
-        Title="律表通·法律文书处理工具 - 主页" Height="950" Width="1300"
+        Title="律表通·法律文书处理工具 - 主页" Height="970" Width="1300"
         WindowStartupLocation="CenterScreen"
         Icon="/Resources/Images/icon.png"
         Background="{DynamicResource SystemControlPageBackgroundChromeLowBrush}"
@@ -217,7 +217,7 @@
                 Background="White">
             <Frame x:Name="MainContentFrame" 
                    NavigationUIVisibility="Hidden"
-                   Margin="15"/>
+                   Margin="10"/>
         </Border>
 
         <!-- ========== 原有模块3：底部版权信息（跨2列） ========== -->
