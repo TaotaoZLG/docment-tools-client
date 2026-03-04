@@ -12,7 +12,7 @@ using System.Windows.Shapes;
 using docment_tools_client.Helpers;
 using docment_tools_client.Models;
 using docment_tools_client.ViewModels;
-using docment_tools_client.Views; // 确保引入页面所在命名空间
+using docment_tools_client.Views;
 
 namespace docment_tools_client.Views
 {
@@ -45,7 +45,7 @@ namespace docment_tools_client.Views
         /// </summary>
         private void MenuListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // 1. 获取选中的菜单项
+            // 获取选中的菜单项
             var listBox = sender as ListBox;
             var selectedItem = listBox?.SelectedItem as ListBoxItem;
             if (selectedItem == null || string.IsNullOrEmpty(selectedItem.Tag?.ToString()))
@@ -53,14 +53,14 @@ namespace docment_tools_client.Views
                 return;
             }
 
-            // 2. 避免重复加载同一页面（优化体验）
+            // 避免重复加载同一页面（优化体验）
             string targetPageName = selectedItem.Tag.ToString();
             if (MainContentFrame.Content?.GetType().Name == targetPageName)
             {
                 return;
             }
 
-            // 3. 反射创建页面实例并导航（传递UserInfo）
+            // 反射创建页面实例并导航（传递UserInfo）
             try
             {
                 // 拼接完整类型名：命名空间 + 页面类名（必须和实际一致）
@@ -73,7 +73,7 @@ namespace docment_tools_client.Views
                     return;
                 }
 
-                // ===== 关键：获取MainViewModel中的UserInfo =====
+                // 获取MainViewModel中的UserInfo
                 var mainViewModel = DataContext as MainViewModel;
                 if (mainViewModel == null || mainViewModel.UserInfo == null)
                 {
@@ -82,16 +82,16 @@ namespace docment_tools_client.Views
                 }
                 UserInfo userInfo = mainViewModel.UserInfo;
 
-                // ===== 核心修复：兼容无参/有参构造创建页面 =====
+                // 兼容无参/有参构造创建页面
                 Page targetPage = null;
                 try
                 {
-                    // 尝试1：无参构造创建（优先）
+                    // 无参构造创建（优先）
                     targetPage = (Page)Activator.CreateInstance(pageType);
                 }
                 catch (MissingMethodException)
                 {
-                    // 尝试2：调用接收UserInfo参数的构造函数
+                    // 调用接收UserInfo参数的构造函数
                     var constructor = pageType.GetConstructor(new[] { typeof(UserInfo) });
                     if (constructor != null)
                     {
@@ -99,14 +99,14 @@ namespace docment_tools_client.Views
                     }
                     else
                     {
-                        // 尝试3：调用其他常见构造（比如ViewModel），若无则抛明确错误
+                        // 调用其他常见构造（比如ViewModel），若无则抛明确错误
                         throw new InvalidOperationException(
                             $"页面 {targetPageName} 既无无参构造，也无接收 UserInfo 的构造函数！\n" +
                             $"请给页面添加：public {targetPageName}() {{ }}  或  public {targetPageName}(UserInfo userInfo) {{ }}");
                     }
                 }
 
-                // ===== 给页面赋值UserInfo（兜底）=====
+                // 给页面赋值UserInfo
                 var pageUserInfoProp = targetPage.GetType().GetProperty("UserInfo");
                 if (pageUserInfoProp != null && pageUserInfoProp.CanWrite)
                 {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
@@ -21,21 +21,18 @@ namespace docment_tools_client.Helpers
         {
             if (value is bool boolValue)
             {
-                if (IsInverted) boolValue = !boolValue;
-                // Check for parameter "Invert" string as well if confused
-                if (parameter is string s && s.Equals("Invert", StringComparison.OrdinalIgnoreCase))
-                {
-                    boolValue = !boolValue;
-                }
-                
-                return boolValue ? Visibility.Visible : Visibility.Collapsed;
+                return boolValue ? Visibility.Collapsed : Visibility.Visible;
             }
-            return Visibility.Collapsed;
+            return Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            if (value is Visibility visibility)
+            {
+                return visibility != Visibility.Visible;
+            }
+            return false;
         }
     }
 }

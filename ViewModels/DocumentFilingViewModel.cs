@@ -136,58 +136,78 @@ namespace docment_tools_client.ViewModels
 
         #region 初始化方法
         /// <summary>
-        /// 初始化归档规则（优先级：下划线首段 > 姓名+身份证号 > 唯一字符串 > 文件名兜底）
+        /// 初始化归档规则（优先级：下划线首段 > 姓名+身份证号 > 源文件名兜底）
         /// </summary>
         private void InitFilingRules()
         {
             FilingRuleList = new ObservableCollection<FilingRule>
             {
-                // 规则0（最高优先级）：下划线分隔取首段（适配示例文件名：20200915235025178252491031_xxx）
+                // 规则0（最高优先级）：下划线分隔取首段 → 姓名+身份证号 → 源文件名兜底
                 new FilingRule
                 {
-                    RuleName = "0. 下划线分隔首段（最高优先）",
+                    RuleName = "0. 系统默认（自动降级规则1-3）",
                     GetArchiveKey = fileName =>
                     {
-                        // 先剥离扩展名，避免扩展名干扰
-                        string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                        if (string.IsNullOrWhiteSpace(fileName)) return string.Empty;
+
+                        // 剥离扩展名，优先匹配下划线首段
+                        string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName)?.Trim() ?? string.Empty;
                         if (string.IsNullOrWhiteSpace(nameWithoutExt))
-                            return GetUniqueStringKey(fileName); // 降级到下一级规则
+                            return Path.GetFileName(fileName)?.Trim() ?? string.Empty;
 
                         // 按下划线拆分，取第一个非空分段
                         if (nameWithoutExt.Contains("_"))
                         {
                             string core = nameWithoutExt.Split('_')[0].Trim();
-                            if (!string.IsNullOrWhiteSpace(core))
-                                return core;
+                            if (!string.IsNullOrWhiteSpace(core)) return core;
                         }
-                        // 匹配不到则降级到身份证规则
-                        return GetIdCardKey(fileName);
+
+                        // 下划线匹配失败，降级到姓名+身份证号规则
+                        string idCardKey = GetIdCardKey(fileName);
+                        if (!string.IsNullOrWhiteSpace(idCardKey)) return idCardKey;
+
+                        // 最终兜底到源文件名（去后缀）
+                        return nameWithoutExt;
                     }
                 },
-                // 规则1：匹配姓名+18位身份证号
+                // 规则1：下划线分隔取（首段）
                 new FilingRule
                 {
-                    RuleName = "1. 姓名+18位身份证号",
+                    RuleName = "1. 下划线分隔（首段）",
                     GetArchiveKey = fileName =>
                     {
-                        string idCardKey = GetIdCardKey(fileName);
-                        if (!string.IsNullOrWhiteSpace(idCardKey) && idCardKey != GetUniqueStringKey(fileName))
-                            return idCardKey;
-                        // 降级到唯一字符串规则
-                        return GetUniqueStringKey(fileName);
+                        if (string.IsNullOrWhiteSpace(fileName)) return string.Empty;
+
+                        // 先剥离扩展名，避免扩展名干扰
+                        string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName)?.Trim() ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(nameWithoutExt)) return string.Empty;
+
+                        // 按下划线拆分，取第一个非空分段
+                        return nameWithoutExt.Contains('_') ? nameWithoutExt.Split('_')[0].Trim() : string.Empty;
                     }
                 },
-                // 规则2：匹配唯一字符串（字母/数字/下划线组合）
+                // 规则2：匹配姓名+18位身份证号 → 禁止降级，匹配失败返回空
                 new FilingRule
                 {
-                    RuleName = "2. 唯一字符串（字母/数字/下划线）",
-                    GetArchiveKey = fileName => GetUniqueStringKey(fileName)
+                    RuleName = "2. 姓名+18位身份证号",
+                    GetArchiveKey = fileName =>
+                    {
+                        if (string.IsNullOrWhiteSpace(fileName)) return string.Empty;
+
+                        string idCardKey = GetIdCardKey(fileName);
+                        // 仅返回有效身份证Key，失败直接返回空
+                        return !string.IsNullOrWhiteSpace(idCardKey) ? idCardKey : string.Empty;
+                    }
                 },
-                // 规则3（兜底）：仅按文件名（去后缀）
+                // 规则3：仅按文件名（去后缀）
                 new FilingRule
                 {
-                    RuleName = "3. 文件名（去后缀）（兜底）",
-                    GetArchiveKey = fileName => Path.GetFileNameWithoutExtension(fileName)
+                    RuleName = "3. 文件名（去后缀）",
+                    GetArchiveKey = fileName =>
+                    {
+                        if (string.IsNullOrWhiteSpace(fileName)) return string.Empty;
+                        return Path.GetFileNameWithoutExtension(fileName)?.Trim() ?? string.Empty;
+                    }
                 }
             };
             // 默认选中最高优先级规则
@@ -215,44 +235,6 @@ namespace docment_tools_client.ViewModels
                 return string.IsNullOrEmpty(name) ? idCardMatch.Value : $"{name}_{idCardMatch.Value}";
             }
             return string.Empty;
-        }
-
-        /// <summary>
-        /// 提取唯一字符串Key（支持多分隔符）
-        /// </summary>
-        private string GetUniqueStringKey(string fileName)
-        {
-            string nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
-            if (string.IsNullOrWhiteSpace(nameWithoutExt))
-                return Path.GetFileName(fileName) ?? string.Empty;
-
-            // 先处理下划线（兜底）
-            if (nameWithoutExt.Contains("_"))
-            {
-                string core = nameWithoutExt.Split('_')[0].Trim();
-                if (!string.IsNullOrWhiteSpace(core))
-                    return core;
-            }
-
-            // 匹配连续的字母/数字/下划线（长度≥6）
-            var uniqueStrMatch = Regex.Match(nameWithoutExt, @"(?<=[^a-zA-Z0-9_])[a-zA-Z0-9_]{6,}(?=[^a-zA-Z0-9_])");
-            if (uniqueStrMatch.Success)
-                return uniqueStrMatch.Value;
-
-            // 补充：按常见分隔符（-、空格、#）拆分取首段
-            char[] separators = new[] { '-', ' ', '#' };
-            foreach (char sep in separators)
-            {
-                if (nameWithoutExt.Contains(sep))
-                {
-                    string core = nameWithoutExt.Split(sep)[0].Trim();
-                    if (!string.IsNullOrWhiteSpace(core))
-                        return core;
-                }
-            }
-
-            // 最终兜底：返回文件名主体
-            return nameWithoutExt;
         }
 
         /// <summary>
@@ -563,7 +545,7 @@ namespace docment_tools_client.ViewModels
         {
             try
             {
-                // ========== 核心修改：动态切换OCR读取目录 ==========
+                // 动态切换OCR读取目录
                 string ocrRootDir = string.Empty;
                 if (IsAlreadyArchived)
                 {
@@ -589,6 +571,7 @@ namespace docment_tools_client.ViewModels
                 }
 
                 AddLog("开始OCR识别图片并生成Excel...");
+
                 // 初始化Tesseract引擎（需确保TessData文件夹存在）
                 var tessDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TessData");
                 if (!Directory.Exists(tessDataPath))
@@ -633,7 +616,7 @@ namespace docment_tools_client.ViewModels
                     sheet = workbook.CreateSheet("OCR识别结果");
                 }
 
-                // ========== 修改：遍历动态切换的根目录 ==========
+                // 遍历动态切换的根目录
                 foreach (var archiveFolder in Directory.GetDirectories(ocrRootDir))
                 {
                     var folderName = Path.GetFileName(archiveFolder);
@@ -655,10 +638,11 @@ namespace docment_tools_client.ViewModels
                         string ocrStatus = "成功";
                         try
                         {
-                            using (var engine = new TesseractEngine(tessDataPath, langCode, EngineMode.Default))
+                            using (var engine = new TesseractEngine(tessDataPath, langCode, EngineMode.LstmOnly))
                             {
-                                // 优化OCR识别精度
-                                engine.SetVariable("tessedit_char_whitelist", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\u4e00-\u9fa5");
+                                // 设置OCR参数以提高精度
+                                engine.SetVariable("tessedit_pageseg_mode", "6"); // 单一均匀块
+                                engine.SetVariable("tessedit_char_whitelist", "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ一二三四五六七八九零甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥男女汉族回满蒙藏维吾尔壮布依朝鲜满侗瑶白土家哈尼哈萨克傣黎傈僳佤畲高山拉祜水东乡纳西景颇柯尔克孜土达斡尔仫佬羌布朗撒拉毛南仡佬锡伯阿昌普米塔吉克怒乌孜别克俄罗斯鄂温克德昂保安裕固京塔塔尔鄂伦春赫哲门巴珞巴基诺姓名性别民族出生日期住址公民身份号码");
                                 using (var pix = Pix.LoadFromFile(imageFile))
                                 using (var page = engine.Process(pix))
                                 {
@@ -674,14 +658,11 @@ namespace docment_tools_client.ViewModels
                         }
 
                         // 解析OCR文本为键值对
-                        var ocrKeyValue = ParseOcrTextToKeyValue(ocrText);
-                        if (ocrKeyValue.Count == 0)
-                        {
-                            AddLog($"[{fileName}] 未识别到有效键值对，仅记录原始文本", LogLevel.Warn);
-                            ocrKeyValue.Add("原始文本", ocrText);
-                            ocrKeyValue.Add("识别状态", ocrStatus);
-                            ocrKeyValue.Add("识别时间", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        }
+                        var ocrKeyValue = OcrHelper.ParseIdCardTextToKeyValue(ocrText);
+                        AddLog($"[{fileName}] 未识别到有效键值对，仅记录原始文本", LogLevel.Warn);
+                        ocrKeyValue.Add("原始文本", ocrText);
+                        ocrKeyValue.Add("识别状态", ocrStatus);
+                        ocrKeyValue.Add("识别时间", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
                         // 根据有无模板选择填充方式
                         if (!string.IsNullOrEmpty(ExcelTemplateFilePath) && File.Exists(ExcelTemplateFilePath))
@@ -918,34 +899,6 @@ namespace docment_tools_client.ViewModels
             }
 
             return matchedFiles;
-        }
-
-        /// <summary>
-        /// 解析OCR文本为键值对（支持"键：值""键=值""键-值"等格式）
-        /// </summary>
-        private Dictionary<string, string> ParseOcrTextToKeyValue(string ocrText)
-        {
-            var keyValueDict = new Dictionary<string, string>();
-            if (string.IsNullOrEmpty(ocrText)) return keyValueDict;
-
-            // 正则匹配：键（中文/英文/数字） + 分隔符（：/:/=/—/-） + 值（任意字符）
-            var regex = new Regex(@"([\u4e00-\u9fa5a-zA-Z0-9]+)\s*[:=—-]\s*([^\n\r]+)", RegexOptions.Multiline);
-            var matches = regex.Matches(ocrText);
-
-            foreach (Match match in matches)
-            {
-                if (match.Groups.Count >= 3)
-                {
-                    var key = match.Groups[1].Value.Trim();
-                    var value = match.Groups[2].Value.Trim();
-                    if (!keyValueDict.ContainsKey(key))
-                    {
-                        keyValueDict.Add(key, value);
-                    }
-                }
-            }
-
-            return keyValueDict;
         }
 
         /// <summary>

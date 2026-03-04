@@ -24,7 +24,6 @@
         </Style>
     </Page.Resources>
 
-    <!-- 核心布局：移除冗余的Grid.Row/ColumnSpan（Page内无需继承Window的Grid） -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
